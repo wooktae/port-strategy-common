@@ -74,7 +74,7 @@ DB connection settings are loaded from environment variables through `db_config.
 ```powershell
 $env:INTEREST_DB_HOST = "localhost"
 $env:INTEREST_DB_PORT = "5433"
-$env:INTEREST_DB_NAME = "interest_crawler"
+$env:INTEREST_DB_NAME = "portfolio"
 $env:INTEREST_DB_USER = "postgres"
 $env:INTEREST_DB_PASSWORD = "<password>"
 ```
