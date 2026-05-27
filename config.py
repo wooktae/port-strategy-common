@@ -2,7 +2,13 @@ from __future__ import annotations
 
 from copy import deepcopy
 from decimal import Decimal
+import os
 from typing import Any
+
+try:
+    from port_strategy_common.db_config import get_db_config
+except ModuleNotFoundError:
+    from db_config import get_db_config
 
 
 # =========================================================
@@ -17,11 +23,11 @@ TRADING_DAYS_PER_YEAR = 252
 # DB / RUN CONFIG
 # =========================================================
 DB_CONFIG = {
-    "host": "localhost",
-    "port": 5433,
-    "dbname": "interest_crawler",
-    "user": "postgres",
-    "password": "doflwhsk3768!",
+    "host": os.environ.get("INTEREST_DB_HOST", "localhost"),
+    "port": int(os.environ.get("INTEREST_DB_PORT", "5433")),
+    "dbname": os.environ.get("INTEREST_DB_NAME", "interest_crawler"),
+    "user": os.environ.get("INTEREST_DB_USER", "postgres"),
+    "password": os.environ.get("INTEREST_DB_PASSWORD", ""),
 }
 
 BACKTEST_START_DATE = "2023-01-27"
@@ -288,7 +294,7 @@ def get_runtime_config() -> dict[str, Any]:
         "strategy_name": STRATEGY_NAME,
         "engine_version": ENGINE_VERSION,
         "trading_days_per_year": TRADING_DAYS_PER_YEAR,
-        "db_config": deepcopy(DB_CONFIG),
+        "db_config": get_db_config(),
         "backtest_start_date": BACKTEST_START_DATE,
         "decision_run_date": DECISION_RUN_DATE,
         "risk_free_rate": RISK_FREE_RATE,

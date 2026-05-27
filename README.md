@@ -69,6 +69,18 @@ decision = common_decide_buy(
 
 ## Runtime Configuration
 
+DB connection settings are loaded from environment variables through `db_config.py`.
+
+```powershell
+$env:INTEREST_DB_HOST = "localhost"
+$env:INTEREST_DB_PORT = "5433"
+$env:INTEREST_DB_NAME = "interest_crawler"
+$env:INTEREST_DB_USER = "postgres"
+$env:INTEREST_DB_PASSWORD = "<password>"
+```
+
+`INTEREST_DB_PASSWORD` has no default. `get_db_config()` raises `RuntimeError` when it is empty.
+
 `config.py`에는 strategy name, engine version, risk threshold, market threshold, buy/sell config, sizing config, report config가 있다.
 
 민감정보 값은 출력하거나 문서에 복사하지 않는다. 실행 서비스와 통합할 때 secret은 local 설정 또는 환경별 설정으로 분리하는 방향이 적합하다.

@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 2026-05-27
+
+### Changed
+
+- Externalized DB connection settings to `INTEREST_DB_*` environment variables.
+- Removed the hardcoded DB password from source configuration.
+
 ## 2026-05-26
 
 ### Added
