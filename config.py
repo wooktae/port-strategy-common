@@ -1,3 +1,9 @@
+"""전략 코어 기본 설정과 runtime config snapshot 모듈.
+
+시장, 필터, sizing, 매수/매도, 리포트 설정 값을 dictionary로 제공한다.
+DB 접속 민감값은 환경변수 또는 로컬 설정에서 주입되며 문서/로그에 실제 값을 노출하지 않는다.
+"""
+
 from __future__ import annotations
 
 from copy import deepcopy

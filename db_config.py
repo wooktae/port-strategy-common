@@ -1,3 +1,9 @@
+"""DB 접속 설정을 환경변수에서 로드하는 helper 모듈.
+
+`INTEREST_DB_*` 값을 읽어 connection config dictionary를 반환한다.
+비밀번호 기본값은 제공하지 않으며, 실제 DB 연결이나 DDL/DML 실행은 수행하지 않는다.
+"""
+
 from __future__ import annotations
 
 import os

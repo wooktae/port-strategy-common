@@ -1,3 +1,9 @@
+"""최종 매수 판단 orchestration 모듈.
+
+BUY filter, BUY guard, BUY sizing을 순서대로 호출해 최종 BUY/SKIP 결과를 만든다.
+동일 입력에 대해 backtest와 daily가 같은 결과를 얻도록 순수 함수 흐름을 유지한다.
+"""
+
 from __future__ import annotations
 
 from port_strategy_common.common_buy_filter import common_decide_buy_filter

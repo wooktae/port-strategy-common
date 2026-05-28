@@ -1,3 +1,9 @@
+"""매수 측 risk guard 공통 모듈.
+
+과열 추격, 매수일 손절 위험, 중간 수급/좁은 range 위험 등 BUY sizing에 필요한 flag를 계산한다.
+이 모듈은 주문 실행이나 DB 저장 없이 입력 context와 config만 사용한다.
+"""
+
 from __future__ import annotations
 
 from port_strategy_common.common_context import CommonStockContext

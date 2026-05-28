@@ -1,3 +1,9 @@
+"""MARKET BLOCK 구간 관찰 후보 판단 모듈.
+
+BLOCK 장세에서 실제 매수 신호가 아닌 watch 후보만 선별한다.
+주문, 성과 계산, DB 저장과 분리된 순수 판단 helper로 사용한다.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

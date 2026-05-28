@@ -1,3 +1,9 @@
+"""공통 전략 판단에 입력되는 context dataclass 모음.
+
+시장, 종목, 보유 포지션 상태를 backtest와 daily 흐름에서 같은 형태로 전달한다.
+DB 접근, 외부 API 호출, 파일 IO 없이 caller가 준비한 값만 담는다.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field

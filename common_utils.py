@@ -1,3 +1,9 @@
+"""공통 전략 모듈에서 사용하는 안전 변환 utility.
+
+None, NaN, Decimal, 문자열 입력을 안전하게 float/int/str/bool 값으로 변환한다.
+전략 판단 모듈의 반복 방어 로직을 줄이기 위한 순수 helper만 포함한다.
+"""
+
 from __future__ import annotations
 
 import math

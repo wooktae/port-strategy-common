@@ -1,3 +1,9 @@
+"""최종 매도 판단과 backtest 호환 sell 평가 모듈.
+
+SELL guard 결과를 우선순위에 따라 SELL/HOLD로 변환하고, 기존 backtest evaluate_sell 호환 helper를 제공한다.
+reason 문자열과 반환 dict key는 consumer 호환성에 직접 영향을 주므로 변경에 주의해야 한다.
+"""
+
 from __future__ import annotations
 
 from port_strategy_common.common_context import CommonPositionContext

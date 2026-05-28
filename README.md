@@ -24,6 +24,8 @@
 - `utils.py`: legacy utility module.
 - `__init__.py`: strategy metadata export.
 
+전체 파일별 역할과 운영 주의사항은 `docs/source-file-catalog.md`에 정리한다. `utils.py`처럼 legacy 성격이 있는 파일은 삭제하지 않고 정리 후보로만 표시한다.
+
 ## 설계 원칙
 
 - `common_*` 전략 모듈은 순수 함수 중심으로 유지한다.
@@ -107,3 +109,9 @@ git diff --stat
 ```
 
 코드 수정 시에는 수정 모듈에 맞는 집중 검증을 추가하거나 실행하고, 부족한 test coverage가 있으면 완료 보고에 남긴다.
+
+## 문서화 상태
+
+- `docs/source-file-catalog.md`: repository root 기준 전체 주요 파일의 역할, 책임, 수정/운영 주의사항을 정리한다.
+- Python 소스 파일에는 파일별 module docstring을 추가해 실행 진입점, 외부 연동 여부, 호환성 주의사항을 확인할 수 있게 한다.
+- 2026-05-27 DB 설정 외부화 작업은 `INTEREST_DB_*` 환경변수 사용과 민감정보 미기록 원칙으로 정리되어 있다.

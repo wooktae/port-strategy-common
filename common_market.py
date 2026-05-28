@@ -1,3 +1,9 @@
+"""시장 regime 판단 공통 모듈.
+
+market context와 config를 받아 시장 신호, exposure, 최대 보유 수, 최소 점수 기준을 계산한다.
+공통 전략 모듈 원칙에 따라 DB 접근, 외부 API 호출, 파일 IO를 수행하지 않는다.
+"""
+
 from __future__ import annotations
 
 from port_strategy_common.common_context import CommonMarketContext

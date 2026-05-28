@@ -1,3 +1,9 @@
+"""매수 후보 기본 필터 공통 모듈.
+
+종목 점수, 수급, 변동성, 장중 범위 등을 기준으로 BUY 후보 통과 여부를 판단한다.
+backtest row를 공통 stock context로 변환하는 helper도 함께 제공하며 외부 연동은 수행하지 않는다.
+"""
+
 from __future__ import annotations
 
 from decimal import Decimal

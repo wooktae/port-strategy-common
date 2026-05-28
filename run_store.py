@@ -1,3 +1,9 @@
+"""backtest run metadata와 daily result 저장 helper 모듈.
+
+owning application이 넘긴 DB connection으로 run table 생성, run 생성, daily 결과 저장, run 종료 기록을 수행한다.
+직접 실행 진입점은 없으며 문서화/분석 작업 중에는 이 helper를 호출해 DB DDL/DML을 실행하지 않는다.
+"""
+
 from __future__ import annotations
 
 import json

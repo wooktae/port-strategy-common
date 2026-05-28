@@ -1,3 +1,9 @@
+"""매도 측 guard와 risk flag 공통 모듈.
+
+보유일, 손절, 이익 보호, MARKET BLOCK 세부 조건, 수급/점수 붕괴 여부를 계산한다.
+최종 SELL/HOLD 결정은 별도 모듈에서 우선순위에 따라 처리하며 이 모듈은 외부 연동을 수행하지 않는다.
+"""
+
 from __future__ import annotations
 
 from port_strategy_common.common_context import CommonPositionContext

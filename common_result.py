@@ -1,3 +1,9 @@
+"""공통 전략 판단 결과 dataclass 모음.
+
+시장, 필터, guard, sizing, 최종 매수/매도 판단 결과의 반환 형태를 정의한다.
+consumer 호환성을 위해 필드명과 reason 문자열 변경에 주의해야 한다.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field

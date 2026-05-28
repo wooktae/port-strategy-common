@@ -1,3 +1,9 @@
+"""매수 sizing과 backtest allocation 공통 모듈.
+
+Daily/Execution 단일 종목 sizing과 backtest 후보 리스트 allocation을 같은 설정 기준으로 계산한다.
+금액과 수량 계산만 담당하며 주문 제출, DB 저장, 외부 API 호출은 수행하지 않는다.
+"""
+
 from __future__ import annotations
 
 import math
