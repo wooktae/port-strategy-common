@@ -20,7 +20,6 @@
 - `common_utils.py`: 공통 utility helper.
 - `common_version.py`: 공통 전략 코어 metadata.
 - `config.py`: 전략 상수와 runtime config dictionary.
-- `run_store.py`: owning application이 호출할 때 backtest run metadata와 daily result를 저장하는 helper.
 - `utils.py`: legacy utility module.
 - `__init__.py`: strategy metadata export.
 
@@ -71,25 +70,9 @@ decision = common_decide_buy(
 
 ## Runtime Configuration
 
-DB connection settings are loaded from environment variables through `db_config.py`.
-
-```powershell
-$env:INTEREST_DB_HOST = "localhost"
-$env:INTEREST_DB_PORT = "5433"
-$env:INTEREST_DB_NAME = "portfolio"
-$env:INTEREST_DB_USER = "postgres"
-$env:INTEREST_DB_PASSWORD = "<password>"
-```
-
-`INTEREST_DB_PASSWORD` has no default. `get_db_config()` raises `RuntimeError` when it is empty.
-
 `config.py`에는 strategy name, engine version, risk threshold, market threshold, buy/sell config, sizing config, report config가 있다.
 
 민감정보 값은 출력하거나 문서에 복사하지 않는다. 실행 서비스와 통합할 때 secret은 local 설정 또는 환경별 설정으로 분리하는 방향이 적합하다.
-
-## Persistence Helper
-
-`run_store.py`에는 database connection을 받아 SQL을 실행하는 helper가 있다. 문서화나 분석 작업 중에는 이 helper를 호출해 DB DDL/DML을 실행하지 않는다. 실제 호출 여부와 시점은 owning application이 안전한 환경에서 결정해야 한다.
 
 ## 안전 제약
 
@@ -114,4 +97,4 @@ git diff --stat
 
 - `docs/source-file-catalog.md`: repository root 기준 전체 주요 파일의 역할, 책임, 수정/운영 주의사항을 정리한다.
 - Python 소스 파일에는 파일별 module docstring을 추가해 실행 진입점, 외부 연동 여부, 호환성 주의사항을 확인할 수 있게 한다.
-- 2026-05-27 DB 설정 외부화 작업은 `INTEREST_DB_*` 환경변수 사용과 민감정보 미기록 원칙으로 정리되어 있다.
+- Common core는 database persistence helper와 connection setting을 포함하지 않으며, runtime config snapshot은 전략 설정만 제공한다.

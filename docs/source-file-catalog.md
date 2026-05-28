@@ -77,17 +77,8 @@
 ### `config.py` - 전략 기본 설정
 - 파일 내용: 시장, 필터, sizing, 매수/매도, 리포트 설정과 runtime config snapshot 함수를 제공한다.
 - 주요 역할: 공통 전략 core의 기본 threshold와 config dictionary를 한곳에서 관리한다.
-- 수정/운영 시 주의사항: DB password는 환경변수에서 주입되며 실제 secret 값을 문서나 로그에 기록하지 않는다. config key 이름은 consumer 호환성을 위해 유지한다.
+- 수정/운영 시 주의사항: runtime config snapshot은 전략 설정만 반환한다. external persistence setting은 Common core에서 관리하지 않는다.
 
-### `db_config.py` - DB 설정 환경변수 로더
-- 파일 내용: `INTEREST_DB_*` 환경변수를 읽어 DB connection config dictionary를 반환한다.
-- 주요 역할: DB 접속 민감정보를 source 밖 환경 설정에서 주입하게 한다.
-- 수정/운영 시 주의사항: `INTEREST_DB_PASSWORD` 기본값은 제공하지 않는다. 이 모듈은 설정 dict만 만들며 DB 연결을 실행하지 않는다.
-
-### `run_store.py` - run 저장 helper
-- 파일 내용: run table 생성, run 생성, daily 결과 upsert, run 종료 기록 SQL helper를 제공한다.
-- 주요 역할: owning application이 넘긴 connection으로 backtest run metadata와 daily result를 저장한다.
-- 수정/운영 시 주의사항: 호출 시 DB DDL/DML이 실행된다. 문서화/분석 작업 중에는 직접 호출하지 않는다.
 
 ### `utils.py` - legacy utility
 - 파일 내용: 기존 consumer 호환용 `to_float` helper를 제공한다.
@@ -122,8 +113,8 @@
 - 수정/운영 시 주의사항: 기존 worklog 들여쓰기와 상태 표기 형식을 유지한다.
 
 ### `docs/worklog/2026-05-27.md` - 2026-05-27 작업 일지
-- 파일 내용: DB 설정 환경변수 외부화와 관련 문서 갱신 내역을 기록한다.
-- 주요 역할: hardcoded DB password 제거와 `INTEREST_DB_*` 설정 전환 이력을 보존한다.
+- 파일 내용: 과거 sensitive configuration cleanup 문서 갱신 내역을 기록한다.
+- 주요 역할: hardcoded secret value 제거 이력을 보존한다.
 - 수정/운영 시 주의사항: 실제 민감정보 값은 기록하지 않는다.
 
 ### `docs/worklog/2026-05-28.md` - 2026-05-28 작업 일지

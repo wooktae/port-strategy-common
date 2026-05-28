@@ -10,6 +10,7 @@
 
 ### Changed
 
+- Removed Common core database dependency and kept runtime config snapshots limited to strategy configuration.
 - README에 전체 파일 카탈로그와 파일별 설명 주석 정리 상태를 반영했다.
 
 ### Notes
@@ -17,18 +18,6 @@
 - 기능 변경 없음.
 - 실제 크롤링, 외부 API 호출, DB DDL/DML, 주문 실행은 수행하지 않았다.
 - 민감정보 값은 문서에 기록하지 않았다.
-
-## 2026-05-27
-
-### Changed
-
-- Externalized DB connection settings to `INTEREST_DB_*` environment variables.
-- Removed the hardcoded DB password from source configuration.
-
-### Notes
-
-- 기능 변경 없음.
-- 실제 민감정보 값은 문서에 기록하지 않았다.
 
 ## 2026-05-26
 

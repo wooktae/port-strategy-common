@@ -4,7 +4,7 @@ port_strategy_common
 Shared Strategy Core package.
 
 현재 구조:
-- 기존 legacy 모듈 유지: utils.py, config.py, run_store.py
+- 기존 legacy 모듈 유지: utils.py, config.py
 - 신규 common_* 모듈 추가 예정
 - research / decision / execution이 공통 전략 판단 로직을 재사용하기 위한 패키지
 

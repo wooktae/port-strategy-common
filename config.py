@@ -1,20 +1,14 @@
 """전략 코어 기본 설정과 runtime config snapshot 모듈.
 
 시장, 필터, sizing, 매수/매도, 리포트 설정 값을 dictionary로 제공한다.
-DB 접속 민감값은 환경변수 또는 로컬 설정에서 주입되며 문서/로그에 실제 값을 노출하지 않는다.
+runtime config snapshot은 전략 설정만 반환한다.
 """
 
 from __future__ import annotations
 
 from copy import deepcopy
 from decimal import Decimal
-import os
 from typing import Any
-
-try:
-    from port_strategy_common.db_config import get_db_config
-except ModuleNotFoundError:
-    from db_config import get_db_config
 
 
 # =========================================================
@@ -24,18 +18,6 @@ STRATEGY_NAME = "strategy_ai"
 ENGINE_VERSION = "RESEARCH_V3_EXIT_SOFTENED"
 TRADING_DAYS_PER_YEAR = 252
 
-
-# =========================================================
-# DB / RUN CONFIG
-# =========================================================
-DB_CONFIG = {
-    "host": os.environ.get("INTEREST_DB_HOST", "localhost"),
-    "port": int(os.environ.get("INTEREST_DB_PORT", "5433")),
-    "dbname": os.environ.get("INTEREST_DB_NAME", "portfolio"),
-    "user": os.environ.get("INTEREST_DB_USER", "postgres"),
-    "password": os.environ.get("INTEREST_DB_PASSWORD", ""),
-    "options": "-c search_path=research,decision,execution,connector,preprocessor,interest,reference,legacy,public",
-}
 
 BACKTEST_START_DATE = "2023-01-27"
 DECISION_RUN_DATE = "2026-04-02"
@@ -301,7 +283,6 @@ def get_runtime_config() -> dict[str, Any]:
         "strategy_name": STRATEGY_NAME,
         "engine_version": ENGINE_VERSION,
         "trading_days_per_year": TRADING_DAYS_PER_YEAR,
-        "db_config": get_db_config(),
         "backtest_start_date": BACKTEST_START_DATE,
         "decision_run_date": DECISION_RUN_DATE,
         "risk_free_rate": RISK_FREE_RATE,
