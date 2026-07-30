@@ -1,0 +1,31 @@
+[build-system]
+requires = [
+    "setuptools>=80.0",
+    "wheel>=0.45"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "port-strategy-common"
+version = "1.0.0rc1"
+description = "Shared strategy core for portfolio research, decision, and execution services."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "LicenseRef-Proprietary"
+authors = [
+    { name = "Wooktae Jung" }
+]
+dependencies = []
+
+[tool.setuptools]
+packages = ["port_strategy_common"]
+
+[tool.setuptools.package-dir]
+port_strategy_common = "."
+
+[tool.setuptools.exclude-package-data]
+port_strategy_common = [
+    "__pycache__/*",
+    "*.pyc",
+    "docs/*"
+]
