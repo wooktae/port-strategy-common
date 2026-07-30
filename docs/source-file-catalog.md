@@ -244,16 +244,15 @@ Pandas가 없거나 `pd.isna`가 실패해도 안전한 Fallback을 유지하는
 
 | 항목 | 값 |
 |---|---|
-| 책임 | 기존 Consumer 호환 Utility |
-| 주요 기능 | `to_float` 등 Legacy Helper |
-| 입력 | 기존 호출 값 |
-| 출력 | 호환 변환 값 |
-| 현재 분류 | Legacy 가능 보존 대상 |
+| 책임 | Legacy 호환 Helper |
+| 주요 기능 | `to_float` |
+| 의존성 | pandas 사용 |
+| Consumer | Research가 `to_float` 직접 Import |
+| 현재 분류 | Legacy 보존 대상 |
 | 공개 계약 | Module Path와 함수명 |
-| Consumer 영향 | 과거 Import 유지 |
-| 변경 위험 | Consumer Import 실패 |
+| 변경 위험 | Research Import 실패 |
 | 확인 대상 | Common 내부·Consumer 직접 Import |
-| 삭제 기준 | 미사용을 정적으로 입증하기 전 삭제 금지 |
+| 삭제 기준 | 제거 전 Consumer 계약 확인 필요 |
 
 신규 코드는 실제 필요와 기존 패턴을 확인한 뒤 `common_utils.py`를 우선 검토한다.
 
@@ -482,12 +481,20 @@ Watch가 감시·감점·조건부 허용 중 무엇인지 Consumer에서 확인
 
 ### StrategyExecution
 
-| Common 파일 | 주요 영향 |
+| 항목 | 값 |
 |---|---|
-| Types | Signal·Status·Mode 의미 |
-| Config | 후보 생성 기준 일부 |
-| Result | 판단 결과 입력 계약 |
-| Version | Strategy 식별 |
+| 현재 상태 | `port_strategy_common` 직접 Import 없음 |
+| 소스 근거 | Common Config 미사용 주석만 존재 |
+| 설계 목적 | Signal·Status·Mode 의미 정렬 대상 |
+| 승격 조건 | 향후 직접 Import 추가 시 직접 Consumer 기록 |
+
+Execution은 현재 직접 Consumer가 아니며 Consumer Contract Test 대상도 아니다.
+
+### 기타 MS
+
+| 항목 | 값 |
+|---|---|
+| View·Crawler·Preprocessor·MarketConnector | 직접 Import 근거 없음 |
 
 실제 Import가 확인되지 않은 항목은 직접 Consumer 계약으로 확정하지 않는다.
 
@@ -705,7 +712,74 @@ Config Snapshot과 Result Detail에도 Secret이 포함되지 않도록 한다.
 단순 오탈자나 설명 정리로 관련 없는 모든 파일을
 기계적으로 갱신하지 않는다.
 
-## 30. 관련 문서
+## 30. DevOps와 Package 파일
+
+Build·CI·배포 관련 파일의 책임과 변경 영향을 정리한다.
+
+전략 판단 로직은 포함하지 않는다.
+
+### `pyproject.toml`
+
+| 항목 | 값 |
+|---|---|
+| 책임 | Package Metadata와 Build 정의 |
+| Package Name | `port-strategy-common` |
+| Package Version | `1.0.0` |
+| Python Version | `>=3.10` |
+| Dependency 선언 | 현재 비어 있음 |
+| Build Backend | setuptools |
+| 변경 위험 | Version·Package 구성과 Wheel 산출 영향 |
+| 확인 대상 | Buildspec·verify_wheel·공개 계약 테스트 Version 정합 |
+
+### `.github/workflows/common-codebuild.yml`
+
+| 항목 | 값 |
+|---|---|
+| 책임 | GitHub OIDC 인증과 CodeBuild 시작 |
+| Trigger | `workflow_dispatch` |
+| 실행 | CodeBuild 시작·상태 대기·결과 판정 |
+| Source SHA | Commit SHA를 Source Version으로 전달 |
+| 변경 위험 | 인증 경계와 Build 시작 방식 |
+| 확인 대상 | 장기 Access Key 미사용과 Source SHA 확인 |
+
+### `.devops/codebuild/buildspec.yml`
+
+| 항목 | 값 |
+|---|---|
+| 책임 | 품질 게이트·Wheel Build·조건부 Publish |
+| 품질 게이트 | Ruff, mypy, Wheel Build, Twine Check |
+| Wheel 검증 | `verify_wheel.py`와 설치 후 공개 계약 테스트 |
+| 설치 검증 | Build한 Wheel 설치 후 테스트 실행 |
+| Publish | 기본 비활성 · Wheel 존재 시에만 진입 |
+| 변경 위험 | 게이트 우회와 실패의 성공 처리 |
+| 확인 대상 | `PUBLISH_TO_CODEARTIFACT` 기본값과 Wheel 경로 확인 |
+
+### `.devops/scripts/verify_wheel.py`
+
+| 항목 | 값 |
+|---|---|
+| 책임 | Wheel 이름과 내부 구조 검증 |
+| Wheel 이름 | `port_strategy_common-1.0.0-py3-none-any.whl` |
+| 필수 Member | 주요 공개 Module 포함 확인 |
+| 금지 경로 | `__pycache__`·`.pyc`·`.git`·`docs` 배제 |
+| 무결성 | SHA-256과 Member 수 출력 |
+| 변경 위험 | Version·Wheel 이름 불일치 |
+| 확인 대상 | Version 변경 시 검사 기준 동시 갱신 |
+
+### `tests/test_public_contract.py`
+
+| 항목 | 값 |
+|---|---|
+| 책임 | 설치된 Wheel 기준 공개 계약 검증 |
+| Distribution Name | `port-strategy-common` 확인 |
+| Package Version | `1.0.0` 확인 |
+| Strategy Version | `COMMON_STRATEGY_V1.0.0` 확인 |
+| 공개 Symbol | 공개 Symbol 6개 Import 확인 |
+| 설치 출처 | `site-packages` 설치 확인 |
+| 변경 위험 | Repository Source Import를 배포 검증으로 오인 |
+| 확인 대상 | Version·Symbol·설치 출처 정합 |
+
+## 31. 관련 문서
 
 - [AGENTS.md](../AGENTS.md)
 - [README.md](../README.md)

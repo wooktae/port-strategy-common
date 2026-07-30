@@ -5,6 +5,88 @@
 현재 구조와 사용 방법은 `README.md`, 작업 규칙은 `AGENTS.md`,
 파일별 책임과 영향은 `docs/source-file-catalog.md`를 기준으로 확인한다.
 
+## 2026-07-30
+
+### Common DevOps와 Version Package 배포 구성
+
+| 항목 | 값 |
+|---|---|
+| 변경 범위 | DevOps 구성 파일과 문서 |
+| 작업 성격 | Versioned Python Package Build·배포 구성 |
+| Package Version | `1.0.0` |
+| Strategy Version | `COMMON_STRATEGY_V1.0.0` |
+| Artifact | Python Wheel |
+| CI | GitHub Actions → AWS CodeBuild |
+| Registry | AWS CodeArtifact |
+| Consumer Contract | Research 48/48, Decision 24/24 |
+| 정식 승격 | `1.0.0rc1` → `1.0.0` Publish |
+| Rollback | 이전 Published Version Pin 재설치 |
+| 전략 판단 변경 | 없음 |
+| Config 변경 | 없음 |
+| 공개 함수 변경 | 없음 |
+| Dataclass·Enum·Reason 변경 | 없음 |
+| DB·API·주문 실행 | 없음 |
+
+전략 판단 로직, Config, 공개 함수, Dataclass, Enum과 Reason 변경은 없다.
+
+### CI와 Wheel Build
+
+| 파일 | 역할 |
+|---|---|
+| `pyproject.toml` | Package Metadata·Version·Dependency 선언 |
+| `.github/workflows/common-codebuild.yml` | OIDC 인증과 CodeBuild 시작·대기 |
+| `.devops/codebuild/buildspec.yml` | 품질 게이트·Wheel Build·조건부 Publish |
+| `.devops/scripts/verify_wheel.py` | Wheel 이름·필수 Member·SHA-256 검증 |
+| `tests/test_public_contract.py` | 설치된 Wheel 기준 공개 계약 테스트 |
+
+품질 게이트는 Ruff, mypy(`.devops/scripts` 범위), Wheel Build,
+Twine Check, Wheel 구조 검증과 공개 계약 테스트 4건이다.
+
+### CodeArtifact 배포
+
+| 항목 | 값 |
+|---|---|
+| RC Publish | `1.0.0rc1` CodeArtifact 배포 |
+| RC 검증 | 설치된 Wheel 공개 계약 테스트 4건 통과 |
+| 정식 Publish | `1.0.0` CodeArtifact 배포 |
+| Version 보존 | RC와 정식 Version 동시 보존 |
+| 기본 Publish | 프로젝트 기본값 `false` |
+| Release Publish | 승인 Release Build에서만 일회성 Override |
+
+### Consumer Contract
+
+| Consumer | 결과 |
+|---|---|
+| StrategyResearch | 48건 통과 |
+| StrategyDecision | 24건 통과 |
+| StrategyExecution | 직접 Import 없음 · 대상 아님 |
+| Legacy `utils.to_float` | Research가 직접 Import · pandas 필요 |
+| pandas 제공 | Research 자체 Runtime Dependency |
+
+### 정식 승격과 Rollback
+
+| 항목 | 값 |
+|---|---|
+| 정식 설치 검증 | `1.0.0` Wheel 설치 후 검증 |
+| 공개 Symbol | 6개 확인 |
+| 공개 계약 테스트 | 4건 통과 |
+| Rollback 재설치 | `1.0.0rc1` Version Pin 재설치 |
+| Rollback 검증 | 공개 계약 테스트 4건 재통과 |
+| Git Repository | 무변경 |
+| 방식 | Version Pin 재설치 |
+
+### 작업 경계
+
+| 항목 | 결과 |
+|---|---|
+| 전략 Python 로직 변경 | 없음 |
+| DB DDL·DML | 없음 |
+| 외부 API 호출 | 없음 |
+| 주문 실행 | 없음 |
+| Consumer Repository 수정 | 없음 |
+| 민감정보 문서 기록 | 없음 |
+| 배포 Slack 알림 연계 | 없음 |
+
 ## 2026-07-23
 
 ### Common 문서 기준 재정비

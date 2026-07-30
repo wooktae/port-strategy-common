@@ -1,25 +1,38 @@
 # port_strategy_common
 
-`port_strategy_common`은 StrategyResearch, StrategyDecision과
-StrategyExecution이 공유하는 Python 전략 판단 코어다.
+`port_strategy_common`은 전략 판단 로직과 Consumer 공통 계약을 제공하는
+Python 전략 판단 코어다.
 
 시장·매수·매도 판단, Sizing, Guard, Context, Result, Enum,
 Config와 Version Metadata를 공통 계약으로 제공한다.
 
+설계 목적상 StrategyResearch, StrategyDecision과 StrategyExecution의
+전략 계약 정렬 대상이다.
+현재 직접 Import Consumer는 StrategyResearch와 StrategyDecision이다.
+StrategyExecution은 현재 `port_strategy_common`을 직접 Import하지 않는다.
+
 Common 자체는 독립 실행 서비스가 아니다.
-각 Consumer가 Context와 Config를 전달하면 순수 판단 결과를 반환하는
-공통 라이브러리다.
+Versioned Python Package로 Build되어 각 Consumer가 Context와 Config를 전달하면
+순수 판단 결과를 반환하는 공통 라이브러리다.
 
 ## 1. 서비스 요약
 
 | 항목 | 값 |
 |---|---|
-| 패키지 | `port_strategy_common` |
+| Package Name | `port-strategy-common` |
+| Import Package | `port_strategy_common` |
 | 주 책임 | 전략 판단 로직과 Consumer 공통 계약 제공 |
-| 실행 형태 | 다른 MS가 Import하는 Python Library |
+| 실행 형태 | Consumer가 Import하는 Versioned Python Package |
+| Package Version | `1.0.0` |
+| Strategy Version | `COMMON_STRATEGY_V1.0.0` |
+| Artifact | Python Wheel |
+| Registry | AWS CodeArtifact |
+| Build | GitHub Actions → AWS CodeBuild |
+| 기본 Publish | 비활성 |
+| Rollback | 이전 Published Version 재설치 |
 | 주요 입력 | Context Dataclass와 Config Dictionary |
 | 주요 출력 | Result Dataclass, Enum, Reason, Detail |
-| 주요 Consumer | StrategyResearch, StrategyDecision, StrategyExecution |
+| 직접 Consumer | StrategyResearch, StrategyDecision |
 | 직접 실행 | 하지 않음 |
 | DB | 직접 접근하지 않음 |
 | 외부 API | 직접 호출하지 않음 |
@@ -121,10 +134,14 @@ Crawler · Preprocessor · DB Row
 
 | 항목 | 값 |
 |---|---|
-| 주요 사용 | Enum·Status·Config·Result 계약 일부 |
-| 목적 | 실행 후보 이전 단계의 공통 의미 정렬 |
+| 현재 상태 | `port_strategy_common`을 직접 Import하지 않음 |
+| 소스 근거 | Common Config를 직접 사용하지 않는다는 주석만 존재 |
+| 설계 목적 | 실행 후보 이전 단계의 공통 의미 정렬 대상 |
 | Consumer 책임 | Plan·Order·Fill·Position 저장 |
-| 주의 | 실제 직접 Import 범위는 소스에서 확인 |
+| 승격 조건 | 향후 직접 Import 추가 시 직접 Consumer로 기록 |
+
+StrategyExecution은 설계상 계약 정렬 대상이지만 현재 직접 Consumer는 아니다.
+현재 직접 Consumer Contract Test 대상도 아니다.
 
 ### 4.4 기타 MS
 
@@ -664,7 +681,89 @@ Legacy 가능성이 있는 Utility Module이다.
 Threshold·Rule·Default가 바뀌어 결과가 달라지면
 Version 영향 여부를 함께 판단한다.
 
-## 21. 주요 파일 구조
+## 21. Package, Build와 배포
+
+### 21.1 Package 기준
+
+| 항목 | 값 |
+|---|---|
+| Package Name | `port-strategy-common` |
+| Import Package | `port_strategy_common` |
+| Package Version | `1.0.0` |
+| Strategy Version | `COMMON_STRATEGY_V1.0.0` |
+| Wheel 이름 | `port_strategy_common-1.0.0-py3-none-any.whl` |
+| Registry | AWS CodeArtifact |
+| RC·정식 보존 | RC와 정식 Version을 별도 Version으로 동시 보존 |
+| 공개 계약 검증 | 설치된 Wheel 기준으로 실행 |
+| 기본 Publish | 프로젝트 기본값 비활성 |
+| Release Publish | 승인 Release Build에서만 일회성 Override |
+
+Package Version은 `pyproject.toml`을 기준으로 한다.
+Wheel 이름은 Version과 함께 여러 검사 지점에서 사용하므로 함께 갱신한다.
+
+실제 AWS Account, Repository Endpoint, Token과 ARN은 문서에 기록하지 않는다.
+
+### 21.2 CI/CD 흐름
+
+```text
+GitHub Push
+    → GitHub Actions OIDC
+    → AWS CodeBuild
+    → Ruff · mypy
+    → Wheel Build · Twine Check
+    → Wheel 구조 검증
+    → 설치된 Wheel 공개 계약 테스트
+    → 기본 Publish Skip
+    → 승인 Release Build에서만 CodeArtifact Publish
+```
+
+GitHub Actions는 OIDC로 인증하고 CodeBuild를 시작한다.
+장기 AWS Access Key를 GitHub Secret에 저장하는 방식은 사용하지 않는다.
+요청 Source SHA와 CodeBuild Resolved Source SHA 일치를 확인한다.
+
+### 21.3 품질 게이트
+
+| 게이트 | 기준 |
+|---|---|
+| Ruff | 정적 검증 통과 |
+| mypy | `.devops/scripts` 범위 통과 |
+| Wheel Build | Wheel 산출 |
+| Twine Check | 배포 Metadata 검증 |
+| Wheel 구조 | 필수 Member와 금지 경로 검증 |
+| 공개 계약 테스트 | 설치된 Wheel 기준 4건 통과 |
+| Source SHA 일치 | 요청 SHA와 Resolved SHA 확인 |
+| Publish 기본값 | 비활성 유지 |
+
+### 21.4 Consumer Contract 결과
+
+| Consumer | 결과 |
+|---|---|
+| StrategyResearch | 48/48 통과 |
+| StrategyDecision | 24/24 통과 |
+| StrategyExecution | N/A · 직접 Import 없음 |
+
+pandas 관련 사실:
+
+- Legacy `utils.to_float`는 pandas를 사용한다.
+- Research는 자체 Runtime Dependency로 pandas를 제공한다.
+- Common Package Dependency 정책 변경은 이번 문서 작업 범위가 아니다.
+
+### 21.5 승격과 Rollback
+
+```text
+1.0.0rc1 Publish
+    → 설치 검증
+    → Research·Decision Contract Test
+    → 1.0.0 Publish
+    → 정식 버전 설치 검증
+    → 1.0.0rc1 Version Pin 재설치
+    → 공개 계약 재검증
+```
+
+Rollback은 Package 삭제나 Git Reset이 아니라
+이전 Published Version을 명시적으로 재설치하는 방식이다.
+
+## 22. 주요 파일 구조
 
 ```text
 .
@@ -687,6 +786,17 @@ Version 영향 여부를 함께 판단한다.
 ├── common_version.py
 ├── config.py
 ├── utils.py
+├── pyproject.toml
+├── .github/
+│   └── workflows/
+│       └── common-codebuild.yml
+├── .devops/
+│   ├── codebuild/
+│   │   └── buildspec.yml
+│   └── scripts/
+│       └── verify_wheel.py
+├── tests/
+│   └── test_public_contract.py
 └── docs/
     └── source-file-catalog.md
 ```
@@ -696,7 +806,7 @@ Version 영향 여부를 함께 판단한다.
 
 실제 파일 추가·삭제가 있으면 Source Catalog와 함께 갱신한다.
 
-## 22. 파일 그룹
+## 23. 파일 그룹
 
 ### 22.1 계약
 
@@ -734,7 +844,7 @@ Version 영향 여부를 함께 판단한다.
 | `common_utils.py` | 공통 순수 Helper |
 | `utils.py` | Legacy 가능 Utility |
 
-## 23. 사용 예시
+## 24. 사용 예시
 
 아래 예시는 Common의 호출 형태를 설명하기 위한 Placeholder다.
 
@@ -757,7 +867,7 @@ market_decision = common_decide_market(market_context)
 
 예제에 실제 계좌번호, Token, Password, Webhook, API Key와 ARN을 사용하지 않는다.
 
-## 24. AWS 운영에서의 위치
+## 25. AWS 운영에서의 위치
 
 Common은 AWS에서 독립 실행되는 MS가 아니다.
 
@@ -773,7 +883,7 @@ Common은 AWS에서 독립 실행되는 MS가 아니다.
 실제 Cluster, Task Definition, Image URI, Subnet, Security Group,
 Secret ARN과 Command ID는 Consumer 문서에서 관리한다.
 
-## 25. 보안
+## 26. 보안
 
 Common Source와 Config에는 Runtime Secret을 포함하지 않는다.
 
@@ -794,7 +904,7 @@ Common Source와 Config에는 Runtime Secret을 포함하지 않는다.
 
 Config Snapshot과 Detail Payload에도 Secret이 포함되지 않도록 한다.
 
-## 26. 안전한 검증
+## 27. 안전한 검증
 
 문서 작업에서는 아래 정적 확인만 수행한다.
 
@@ -829,7 +939,7 @@ git diff -- README.md
 - Consumer Batch·Backtest·Daily 운영 실행
 - File Write Side Effect가 있는 Entrypoint
 
-## 27. 변경 영향 분류
+## 28. 변경 영향 분류
 
 | 변경 | 영향 |
 |---|---|
@@ -845,7 +955,7 @@ git diff -- README.md
 
 전략 결과가 달라지는 변경은 단순 리팩터링으로 보고하지 않는다.
 
-## 28. 현재 확인이 필요한 항목
+## 29. 현재 확인이 필요한 항목
 
 아래 항목은 실제 소스와 Consumer Import를 정적으로 대조해 확정한다.
 
@@ -865,13 +975,24 @@ git diff -- README.md
 | Numeric | Float·Decimal·Boundary |
 | Date | Look-ahead와 Holding Days |
 | Export | `__init__.py` 공개 Symbol |
-| Consumer | Research·Decision·Execution 직접 Import |
-| Legacy | `utils.py` 실제 사용 여부 |
-| Tests | 기존 Test Runner와 Coverage |
 
+2026-07-30 기준 아래 항목은 확정되어 미확정 목록에서 제외한다.
+
+| 항목 | 값 |
+|---|---|
+| Research 직접 Import | 확인 · Contract 48/48 |
+| Decision 직접 Import | 확인 · Contract 24/24 |
+| Execution 직접 Import | 없음 · 직접 Consumer 아님 |
+| Legacy `utils.py` | Research가 `to_float` 직접 Import |
+| 공개 계약 테스트 | 설치된 Wheel 기준 4건 존재 |
+| Package Version | `1.0.0` |
+| Wheel 구조 | 필수 Member·금지 경로 검증 존재 |
+| CI·Publish 방식 | GitHub Actions → CodeBuild, 기본 Publish 비활성 |
+
+실제 소스 확인 없이 Public API 전체 Signature나 Reason 전체 목록까지 확정하지 않는다.
 확인되지 않은 항목을 운영 사실로 단정하지 않는다.
 
-## 29. 문서 체계
+## 30. 문서 체계
 
 | 문서 | 역할 |
 |---|---|
@@ -886,7 +1007,7 @@ git diff -- README.md
 - 날짜별 Worklog는 새로 만들지 않는다.
 - 같은 내용을 여러 문서에 장문으로 반복하지 않는다.
 
-## 30. 관련 문서
+## 31. 관련 문서
 
 - [AGENTS.md](AGENTS.md)
 - [CHANGELOG.md](CHANGELOG.md)

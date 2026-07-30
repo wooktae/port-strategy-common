@@ -92,13 +92,15 @@ Common이 직접 책임지지 않는 범위는 아래와 같다.
 
 | Consumer | Common 사용 범위 |
 |---|---|
-| StrategyResearch | Market·BUY·SELL·Sizing·Config·Version 계약 |
-| StrategyDecision | Daily Market·Filter·Guard·Sizing·BUY·SELL·Block Watch |
-| StrategyExecution | Enum·Status·Config·Result 계약 일부 |
+| StrategyResearch | 직접 Import · Market·BUY·SELL·Sizing·Config·Version 계약 |
+| StrategyDecision | 직접 Import · Daily Market·Filter·Guard·Sizing·BUY·SELL·Block Watch |
+| StrategyExecution | 현재 직접 Import 없음 · 설계상 계약 정렬 대상 |
 | 기타 MS | 직접 Import 근거가 확인된 경우에만 기록 |
 
-- Research와 Decision은 같은 Common 판단 함수를 재사용할 수 있다.
-- Execution이 Common을 직접 호출하는지, Enum만 참조하는지는 실제 Import로 확인한다.
+- 직접 Consumer 여부는 실제 `port_strategy_common` Import로 판단한다.
+- 현재 직접 Consumer는 Research와 Decision이다.
+- Execution은 현재 직접 Import가 없고, Common Config를 직접 사용하지 않는다는 주석만 있다.
+- Execution에서 향후 Common Import가 추가되면 Consumer로 승격한다.
 - View·Crawler·Preprocessor·MarketConnector를 Common Consumer로 추정하지 않는다.
 - Consumer별 입력 변환은 각 Consumer Adapter 책임이다.
 - Common 함수가 특정 Consumer DB Row 구조를 직접 받도록 만들지 않는다.
@@ -846,3 +848,55 @@ git diff -- AGENTS.md
 - 실제 확인하지 않은 Consumer 호환성을 완료로 보고하지 않는다.
 - 전략 결과 변경 여부를 명확히 적는다.
 - 추정한 내용을 사실처럼 보고하지 않는다.
+
+## 40. Package Release 규칙
+
+- Package Version은 `pyproject.toml`을 기준으로 한다.
+- Version 변경 시 Buildspec, Wheel 검증 Script와 공개 계약 테스트의 Version 정합성을 함께 확인한다.
+- Wheel 이름을 코드 여러 곳에서 검사하는 경우 모든 검사 기준을 함께 갱신한다.
+- Build 산출물인 `build`, `dist`, `*.egg-info`와 `__pycache__`를 Source 변경으로 취급하지 않는다.
+- Generated Output을 Commit하지 않는다.
+- 정식 Version은 이미 존재하는 동일 Version 위에 덮어쓰지 않는다.
+- RC와 정식 Version을 별도 Package Version으로 보존한다.
+
+## 41. CI 품질 게이트 규칙
+
+- Ruff, mypy, Wheel Build, Twine Check, Wheel 구조 검증과 공개 계약 테스트를 품질 게이트로 사용한다.
+- mypy 범위는 현재 실제 자동화 Script 범위와 일치시킨다.
+- 존재하지 않는 Source 범위를 임의로 mypy 대상에 추가하지 않는다.
+- 공개 계약 테스트는 설치된 Wheel을 기준으로 실행한다.
+- Repository Source가 Import되는 테스트를 배포 Package 검증으로 보고하지 않는다.
+
+## 42. Publish 안전 규칙
+
+- CodeBuild 프로젝트의 기본 `PUBLISH_TO_CODEARTIFACT` 값은 `false`로 유지한다.
+- 일반 Push Build는 Package를 Publish하지 않는다.
+- 승인된 Release Build에서만 일회성 Environment Override로 Publish를 활성화한다.
+- Wheel Build가 성공하고 Wheel 경로가 확인된 경우에만 Publish한다.
+- Build 실패 또는 Wheel 부재 시 Publish 성공으로 보고하지 않는다.
+- 동일 Version 재업로드를 시도하지 않는다.
+- 인증 Token과 인증이 포함된 Index URL을 출력하거나 문서화하지 않는다.
+
+## 43. Consumer Contract 규칙
+
+- Consumer 여부는 실제 `port_strategy_common` Import로 판단한다.
+- 주석, DB 문자열과 간접 결과 사용만으로 Consumer라고 단정하지 않는다.
+- Consumer Contract Test는 실제 Import Module과 Symbol을 설치된 Wheel에 대조한다.
+- Consumer 자체 Runtime Dependency가 필요한 Module은 해당 Consumer Dependency와 함께 검증한다.
+- 현재 직접 Consumer는 Research와 Decision이다.
+- Execution은 현재 직접 Import가 없으므로 직접 Consumer로 기록하지 않는다.
+- Execution에서 향후 Common Import가 추가되면 Consumer Contract Test 대상에 포함한다.
+
+## 44. 승격과 Rollback 규칙
+
+- RC 설치와 Consumer Contract Test 통과 후 정식 Version을 승격한다.
+- 정식 승격은 새 Version Wheel을 Build하고 CodeArtifact에 Publish하는 방식으로 수행한다.
+- Rollback은 Source Reset이나 Package 삭제가 아니라 이전 Published Version을 명시적으로 재설치하는 방식으로 검증한다.
+- Rollback 후 Package Version, 설치 위치, 공개 Symbol과 공개 계약 테스트를 다시 확인한다.
+- Package Version을 Archived 또는 삭제 상태로 변경하는 작업은 별도 승인 없이 수행하지 않는다.
+
+## 45. 문서 작업 안전
+
+- 문서 수정에서는 AWS CLI, CodeBuild, CodeArtifact Publish와 Package 설치를 실행하지 않는다.
+- 완료 증적을 문서로 옮길 때 실제 Token, Account ID, ARN, Build ID와 인증 URL을 제거한다.
+- 문서 작업만으로 Package Version이나 Strategy Version을 변경하지 않는다.
