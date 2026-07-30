@@ -42,7 +42,7 @@ phases:
       - source .venv-ci/bin/activate
       - python -m ruff check tests .devops/scripts
       - echo "=== TYPE CHECK ==="
-      - python -m mypy --explicit-package-bases --follow-imports=skip --disable-error-code import-untyped tests .devops/scripts
+      - python -m mypy --explicit-package-bases .devops/scripts
       - echo "=== BUILD WHEEL ==="
       - python -m build --wheel
       - python -m twine check dist/*
