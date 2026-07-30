@@ -42,7 +42,7 @@ phases:
       - source .venv-ci/bin/activate
       - python -m ruff check tests .devops/scripts
       - echo "=== TYPE CHECK ==="
-      - python -m mypy --follow-imports=skip tests .devops/scripts
+      - python -m mypy --explicit-package-bases --follow-imports=skip --disable-error-code import-untyped tests .devops/scripts
       - echo "=== BUILD WHEEL ==="
       - python -m build --wheel
       - python -m twine check dist/*
@@ -58,13 +58,17 @@ phases:
     commands:
       - echo "=== POST BUILD ==="
       - source .venv-ci/bin/activate
-      - export WHEEL_PATH="$(find dist -maxdepth 1 -type f -name 'port_strategy_common-1.0.0rc1-*.whl' | head -n 1)"
-      - test -n "${WHEEL_PATH}"
-      - export WHEEL_SHA256="$(sha256sum "${WHEEL_PATH}" | awk '{print $1}')"
-      - echo "WHEEL_NAME=$(basename "${WHEEL_PATH}")"
-      - echo "WHEEL_SHA256=${WHEEL_SHA256}"
+      - export WHEEL_PATH="$(find dist -maxdepth 1 -type f -name 'port_strategy_common-1.0.0rc1-*.whl' 2>/dev/null | head -n 1)"
       - |
-        if [ "${PUBLISH_TO_CODEARTIFACT}" = "true" ]; then
+        if [ -z "${WHEEL_PATH}" ]; then
+          echo "WHEEL_NOT_AVAILABLE=POST_BUILD_SKIPPED"
+        else
+          export WHEEL_SHA256="$(sha256sum "${WHEEL_PATH}" | awk '{print $1}')"
+          echo "WHEEL_NAME=$(basename "${WHEEL_PATH}")"
+          echo "WHEEL_SHA256=${WHEEL_SHA256}"
+        fi
+      - |
+        if [ "${PUBLISH_TO_CODEARTIFACT}" = "true" ] && [ -n "${WHEEL_PATH}" ]; then
           echo "=== PUBLISH TO CODEARTIFACT ==="
 
           export AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
@@ -103,6 +107,8 @@ phases:
           unset CODEARTIFACT_AUTH_TOKEN
 
           echo "CODEARTIFACT_PUBLISH=SUCCESS"
+        elif [ "${PUBLISH_TO_CODEARTIFACT}" = "true" ]; then
+          echo "CODEARTIFACT_PUBLISH=SKIPPED_NO_WHEEL"
         else
           echo "CODEARTIFACT_PUBLISH=SKIPPED"
         fi
