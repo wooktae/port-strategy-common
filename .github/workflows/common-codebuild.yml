@@ -1,0 +1,113 @@
+name: Common CodeBuild
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: common-codebuild-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: ap-northeast-2
+  CODEBUILD_PROJECT_NAME: portfolio-common-build
+
+jobs:
+  build:
+    name: Start Common CodeBuild
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_CODEBUILD_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: github-port-strategy-common-codebuild
+
+      - name: Verify AWS identity
+        run: aws sts get-caller-identity
+
+      - name: Start CodeBuild
+        id: start-build
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          BUILD_ID="$(
+            aws codebuild start-build \
+              --project-name "${CODEBUILD_PROJECT_NAME}" \
+              --source-version "${GITHUB_SHA}" \
+              --query 'build.id' \
+              --output text
+          )"
+
+          test -n "${BUILD_ID}"
+          test "${BUILD_ID}" != "None"
+
+          echo "build_id=${BUILD_ID}" >> "${GITHUB_OUTPUT}"
+          echo "Started CodeBuild: ${BUILD_ID}"
+
+      - name: Wait for CodeBuild
+        shell: bash
+        env:
+          BUILD_ID: ${{ steps.start-build.outputs.build_id }}
+        run: |
+          set -euo pipefail
+
+          while true; do
+            BUILD_STATUS="$(
+              aws codebuild batch-get-builds \
+                --ids "${BUILD_ID}" \
+                --query 'builds[0].buildStatus' \
+                --output text
+            )"
+
+            echo "CodeBuild status: ${BUILD_STATUS}"
+
+            case "${BUILD_STATUS}" in
+              SUCCEEDED)
+                exit 0
+                ;;
+              FAILED|FAULT|STOPPED|TIMED_OUT)
+                exit 1
+                ;;
+              IN_PROGRESS)
+                sleep 15
+                ;;
+              *)
+                echo "Unexpected CodeBuild status: ${BUILD_STATUS}"
+                exit 1
+                ;;
+            esac
+          done
+
+      - name: Show CodeBuild result
+        if: always()
+        shell: bash
+        env:
+          BUILD_ID: ${{ steps.start-build.outputs.build_id }}
+        run: |
+          if [ -z "${BUILD_ID}" ]; then
+            echo "CodeBuild was not started."
+            exit 0
+          fi
+
+          aws codebuild batch-get-builds \
+            --ids "${BUILD_ID}" \
+            --query 'builds[0].{
+              id:id,
+              status:buildStatus,
+              sourceVersion:resolvedSourceVersion,
+              startTime:startTime,
+              endTime:endTime,
+              logs:logs.deepLink
+            }' \
+            --output table

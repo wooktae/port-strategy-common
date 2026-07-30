@@ -1,0 +1,114 @@
+version: 0.2
+
+env:
+  shell: bash
+  variables:
+    PACKAGE_NAME: port-strategy-common
+    PACKAGE_VERSION: 1.0.0rc1
+    CODEARTIFACT_REGION: ap-northeast-1
+    CODEARTIFACT_DOMAIN: portfolio
+    CODEARTIFACT_REPOSITORY: portfolio-common
+    PUBLISH_TO_CODEARTIFACT: "false"
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.11
+    commands:
+      - echo "=== INSTALL BUILD TOOLS ==="
+      - python --version
+      - python -m venv .venv-ci
+      - source .venv-ci/bin/activate
+      - python -m pip install --upgrade pip
+      - python -m pip install "build>=1.2,<2" "twine>=5,<8" "ruff>=0.8,<1" "mypy>=1.10,<2"
+
+  pre_build:
+    commands:
+      - echo "=== PREPARE BUILD ==="
+      - source .venv-ci/bin/activate
+      - export SOURCE_SHA="${CODEBUILD_RESOLVED_SOURCE_VERSION:-unknown}"
+      - export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)"
+      - echo "SOURCE_SHA=${SOURCE_SHA}"
+      - echo "SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}"
+      - echo "PACKAGE_NAME=${PACKAGE_NAME}"
+      - echo "PACKAGE_VERSION=${PACKAGE_VERSION}"
+      - echo "PUBLISH_TO_CODEARTIFACT=${PUBLISH_TO_CODEARTIFACT}"
+      - rm -rf build dist *.egg-info
+      - python -m compileall -q .
+
+  build:
+    commands:
+      - echo "=== STATIC ANALYSIS ==="
+      - source .venv-ci/bin/activate
+      - python -m ruff check tests .devops/scripts
+      - echo "=== TYPE CHECK ==="
+      - python -m mypy --follow-imports=skip tests .devops/scripts
+      - echo "=== BUILD WHEEL ==="
+      - python -m build --wheel
+      - python -m twine check dist/*
+      - export WHEEL_PATH="$(find dist -maxdepth 1 -type f -name 'port_strategy_common-1.0.0rc1-*.whl' | head -n 1)"
+      - test -n "${WHEEL_PATH}"
+      - python .devops/scripts/verify_wheel.py "${WHEEL_PATH}"
+      - echo "=== INSTALL BUILT WHEEL ==="
+      - python -m pip install --no-deps --force-reinstall "${WHEEL_PATH}"
+      - echo "=== UNIT AND PUBLIC CONTRACT TEST ==="
+      - python -m unittest discover -s tests -p "test_*.py" -v
+
+  post_build:
+    commands:
+      - echo "=== POST BUILD ==="
+      - source .venv-ci/bin/activate
+      - export WHEEL_PATH="$(find dist -maxdepth 1 -type f -name 'port_strategy_common-1.0.0rc1-*.whl' | head -n 1)"
+      - test -n "${WHEEL_PATH}"
+      - export WHEEL_SHA256="$(sha256sum "${WHEEL_PATH}" | awk '{print $1}')"
+      - echo "WHEEL_NAME=$(basename "${WHEEL_PATH}")"
+      - echo "WHEEL_SHA256=${WHEEL_SHA256}"
+      - |
+        if [ "${PUBLISH_TO_CODEARTIFACT}" = "true" ]; then
+          echo "=== PUBLISH TO CODEARTIFACT ==="
+
+          export AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
+
+          export PYPI_ENDPOINT="$(
+            aws codeartifact get-repository-endpoint \
+              --region "${CODEARTIFACT_REGION}" \
+              --domain "${CODEARTIFACT_DOMAIN}" \
+              --domain-owner "${AWS_ACCOUNT_ID}" \
+              --repository "${CODEARTIFACT_REPOSITORY}" \
+              --format pypi \
+              --query repositoryEndpoint \
+              --output text
+          )"
+
+          export CODEARTIFACT_AUTH_TOKEN="$(
+            aws codeartifact get-authorization-token \
+              --region "${CODEARTIFACT_REGION}" \
+              --domain "${CODEARTIFACT_DOMAIN}" \
+              --domain-owner "${AWS_ACCOUNT_ID}" \
+              --query authorizationToken \
+              --output text
+          )"
+
+          test -n "${CODEARTIFACT_AUTH_TOKEN}"
+
+          export TWINE_USERNAME="aws"
+          export TWINE_PASSWORD="${CODEARTIFACT_AUTH_TOKEN}"
+
+          python -m twine upload \
+            --repository-url "${PYPI_ENDPOINT}" \
+            --non-interactive \
+            "${WHEEL_PATH}"
+
+          unset TWINE_PASSWORD
+          unset CODEARTIFACT_AUTH_TOKEN
+
+          echo "CODEARTIFACT_PUBLISH=SUCCESS"
+        else
+          echo "CODEARTIFACT_PUBLISH=SKIPPED"
+        fi
+      - echo "COMMON_CODEBUILD=SUCCESS"
+
+artifacts:
+  files:
+    - dist/*
+  discard-paths: false
