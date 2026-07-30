@@ -43,7 +43,7 @@ def main() -> int:
     if not wheel.is_file():
         raise FileNotFoundError(f"Wheel not found: {wheel}")
 
-    if wheel.name != "port_strategy_common-1.0.0rc1-py3-none-any.whl":
+    if wheel.name != "port_strategy_common-1.0.0-py3-none-any.whl":
         raise ValueError(f"Unexpected wheel name: {wheel.name}")
 
     with zipfile.ZipFile(wheel) as archive:

@@ -20,7 +20,7 @@ class PublicContractTest(unittest.TestCase):
         installed = distribution("port-strategy-common")
 
         self.assertEqual(installed.metadata["Name"], "port-strategy-common")
-        self.assertEqual(installed.version, "1.0.0rc1")
+        self.assertEqual(installed.version, "1.0.0")
 
     def test_strategy_version(self) -> None:
         self.assertEqual(
