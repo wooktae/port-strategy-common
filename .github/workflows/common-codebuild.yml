@@ -1,6 +1,9 @@
 name: Common CodeBuild
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -25,6 +28,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Resolve publish mode
+        id: publish-mode
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ "${GITHUB_EVENT_NAME}" = "push" ] && [ "${GITHUB_REF}" = "refs/heads/main" ]; then
+            echo "publish=true" >> "${GITHUB_OUTPUT}"
+            echo "PUBLISH_MODE=CODEARTIFACT"
+          else
+            echo "publish=false" >> "${GITHUB_OUTPUT}"
+            echo "PUBLISH_MODE=BUILD_ONLY"
+          fi
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -38,13 +55,19 @@ jobs:
       - name: Start CodeBuild
         id: start-build
         shell: bash
+        env:
+          PUBLISH_TO_CODEARTIFACT: ${{ steps.publish-mode.outputs.publish }}
         run: |
           set -euo pipefail
+
+          echo "PUBLISH_TO_CODEARTIFACT=${PUBLISH_TO_CODEARTIFACT}"
 
           BUILD_ID="$(
             aws codebuild start-build \
               --project-name "${CODEBUILD_PROJECT_NAME}" \
               --source-version "${GITHUB_SHA}" \
+              --environment-variables-override \
+                name=PUBLISH_TO_CODEARTIFACT,value="${PUBLISH_TO_CODEARTIFACT}",type=PLAINTEXT \
               --query 'build.id' \
               --output text
           )"
