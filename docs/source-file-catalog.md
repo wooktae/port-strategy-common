@@ -724,22 +724,25 @@ Build·CI·배포 관련 파일의 책임과 변경 영향을 정리한다.
 |---|---|
 | 책임 | Package Metadata와 Build 정의 |
 | Package Name | `port-strategy-common` |
-| Package Version | `1.0.0` |
+| Package Version | `1.0.1` |
+| Version Source | Package Version Canonical Source |
 | Python Version | `>=3.10` |
 | Dependency 선언 | 현재 비어 있음 |
 | Build Backend | setuptools |
 | 변경 위험 | Version·Package 구성과 Wheel 산출 영향 |
-| 확인 대상 | Buildspec·verify_wheel·공개 계약 테스트 Version 정합 |
+| 확인 대상 | Buildspec·verify_wheel·공개 계약 테스트가 이 Version을 동적으로 따름 |
 
 ### `.github/workflows/common-codebuild.yml`
 
 | 항목 | 값 |
 |---|---|
 | 책임 | GitHub OIDC 인증과 CodeBuild 시작 |
-| Trigger | `workflow_dispatch` |
+| Trigger | main Push + `workflow_dispatch` |
+| main Push | Publish 활성화 |
+| workflow_dispatch | Build-only |
 | 실행 | CodeBuild 시작·상태 대기·결과 판정 |
 | Source SHA | Commit SHA를 Source Version으로 전달 |
-| 변경 위험 | 인증 경계와 Build 시작 방식 |
+| 변경 위험 | 인증 경계와 Publish 활성화 방식 |
 | 확인 대상 | 장기 Access Key 미사용과 Source SHA 확인 |
 
 ### `.devops/codebuild/buildspec.yml`
@@ -748,9 +751,11 @@ Build·CI·배포 관련 파일의 책임과 변경 영향을 정리한다.
 |---|---|
 | 책임 | 품질 게이트·Wheel Build·조건부 Publish |
 | 품질 게이트 | Ruff, mypy, Wheel Build, Twine Check |
+| Version Resolve | `pyproject.toml`에서 Package Version 산출 |
 | Wheel 검증 | `verify_wheel.py`와 설치 후 공개 계약 테스트 |
-| 설치 검증 | Build한 Wheel 설치 후 테스트 실행 |
-| Publish | 기본 비활성 · Wheel 존재 시에만 진입 |
+| Build Failure Gate | Build 실패 시 Publish 차단 |
+| Version Guard | 동일 Version 존재 시 Publish 차단 |
+| Publish | 조건부 · CodeBuild 기본값 `false` |
 | 변경 위험 | 게이트 우회와 실패의 성공 처리 |
 | 확인 대상 | `PUBLISH_TO_CODEARTIFACT` 기본값과 Wheel 경로 확인 |
 
@@ -759,12 +764,12 @@ Build·CI·배포 관련 파일의 책임과 변경 영향을 정리한다.
 | 항목 | 값 |
 |---|---|
 | 책임 | Wheel 이름과 내부 구조 검증 |
-| Wheel 이름 | `port_strategy_common-1.0.0-py3-none-any.whl` |
+| Wheel 이름 | `pyproject.toml` Package Version 기준 동적 검증 |
 | 필수 Member | 주요 공개 Module 포함 확인 |
 | 금지 경로 | `__pycache__`·`.pyc`·`.git`·`docs` 배제 |
 | 무결성 | SHA-256과 Member 수 출력 |
-| 변경 위험 | Version·Wheel 이름 불일치 |
-| 확인 대상 | Version 변경 시 검사 기준 동시 갱신 |
+| 변경 위험 | `pyproject.toml`과 Wheel 산출물 불일치 |
+| 확인 대상 | Version 하드코딩 없이 `pyproject.toml`을 동적으로 따름 |
 
 ### `tests/test_public_contract.py`
 
@@ -772,7 +777,7 @@ Build·CI·배포 관련 파일의 책임과 변경 영향을 정리한다.
 |---|---|
 | 책임 | 설치된 Wheel 기준 공개 계약 검증 |
 | Distribution Name | `port-strategy-common` 확인 |
-| Package Version | `1.0.0` 확인 |
+| Package Version | `pyproject.toml`과 동적 비교 |
 | Strategy Version | `COMMON_STRATEGY_V1.0.0` 확인 |
 | 공개 Symbol | 공개 Symbol 6개 Import 확인 |
 | 설치 출처 | `site-packages` 설치 확인 |

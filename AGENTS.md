@@ -851,9 +851,9 @@ git diff -- AGENTS.md
 
 ## 40. Package Release 규칙
 
-- Package Version은 `pyproject.toml`을 기준으로 한다.
-- Version 변경 시 Buildspec, Wheel 검증 Script와 공개 계약 테스트의 Version 정합성을 함께 확인한다.
-- Wheel 이름을 코드 여러 곳에서 검사하는 경우 모든 검사 기준을 함께 갱신한다.
+- Package Version의 Canonical Source는 `pyproject.toml` 한 곳이다.
+- Package Version을 `verify_wheel.py`와 공개 계약 테스트에 하드코딩하지 않는다.
+- `verify_wheel.py`와 공개 계약 테스트는 `pyproject.toml` Version을 동적으로 따른다.
 - Build 산출물인 `build`, `dist`, `*.egg-info`와 `__pycache__`를 Source 변경으로 취급하지 않는다.
 - Generated Output을 Commit하지 않는다.
 - 정식 Version은 이미 존재하는 동일 Version 위에 덮어쓰지 않는다.
@@ -869,13 +869,14 @@ git diff -- AGENTS.md
 
 ## 42. Publish 안전 규칙
 
-- CodeBuild 프로젝트의 기본 `PUBLISH_TO_CODEARTIFACT` 값은 `false`로 유지한다.
-- 일반 Push Build는 Package를 Publish하지 않는다.
-- 승인된 Release Build에서만 일회성 Environment Override로 Publish를 활성화한다.
+- CodeBuild 프로젝트의 기본 `PUBLISH_TO_CODEARTIFACT` 값은 `false` 안전장치로 유지한다.
+- main Push Workflow만 Publish Override를 활성화한다.
+- `workflow_dispatch`는 Publish를 활성화하지 않는 Build-only 실행이다.
 - Wheel Build가 성공하고 Wheel 경로가 확인된 경우에만 Publish한다.
-- Build 실패 또는 Wheel 부재 시 Publish 성공으로 보고하지 않는다.
-- 동일 Version 재업로드를 시도하지 않는다.
+- Build 실패 또는 Wheel 부재 시 Publish하지 않는다.
+- Publish 전 동일 Version이 존재하면 Publish를 차단한다.
 - 인증 Token과 인증이 포함된 Index URL을 출력하거나 문서화하지 않는다.
+- DevOps 상세 정책(IAM, OIDC Trust, 운영 증적)은 port-devops가 관리한다.
 
 ## 43. Consumer Contract 규칙
 

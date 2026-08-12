@@ -23,13 +23,14 @@ Versioned Python Package로 Build되어 각 Consumer가 Context와 Config를 전
 | Import Package | `port_strategy_common` |
 | 주 책임 | 전략 판단 로직과 Consumer 공통 계약 제공 |
 | 실행 형태 | Consumer가 Import하는 Versioned Python Package |
-| Package Version | `1.0.0` |
+| Package Version | `1.0.1` |
 | Strategy Version | `COMMON_STRATEGY_V1.0.0` |
 | Artifact | Python Wheel |
 | Registry | AWS CodeArtifact |
 | Build | GitHub Actions → AWS CodeBuild |
-| 기본 Publish | 비활성 |
-| Rollback | 이전 Published Version 재설치 |
+| Release | main Push 자동 Versioned Package Publish |
+| 수동 실행 | `workflow_dispatch` Build-only |
+| Rollback | 이전 Published Version Pin 재설치 |
 | 주요 입력 | Context Dataclass와 Config Dictionary |
 | 주요 출력 | Result Dataclass, Enum, Reason, Detail |
 | 직접 Consumer | StrategyResearch, StrategyDecision |
@@ -689,37 +690,46 @@ Version 영향 여부를 함께 판단한다.
 |---|---|
 | Package Name | `port-strategy-common` |
 | Import Package | `port_strategy_common` |
-| Package Version | `1.0.0` |
+| Package Version | `1.0.1` |
 | Strategy Version | `COMMON_STRATEGY_V1.0.0` |
-| Wheel 이름 | `port_strategy_common-1.0.0-py3-none-any.whl` |
+| Wheel 이름 | `port_strategy_common-1.0.1-py3-none-any.whl` |
 | Registry | AWS CodeArtifact |
 | RC·정식 보존 | RC와 정식 Version을 별도 Version으로 동시 보존 |
 | 공개 계약 검증 | 설치된 Wheel 기준으로 실행 |
-| 기본 Publish | 프로젝트 기본값 비활성 |
-| Release Publish | 승인 Release Build에서만 일회성 Override |
+| CodeBuild 기본 Publish | 프로젝트 기본값 `false` (안전장치) |
+| main Push | 자동 Release Publish 활성화 |
+| workflow_dispatch | Build-only |
 
-Package Version은 `pyproject.toml`을 기준으로 한다.
-Wheel 이름은 Version과 함께 여러 검사 지점에서 사용하므로 함께 갱신한다.
+Package Version의 Canonical Source는 `pyproject.toml`이다.
+Wheel 이름과 Version 검증은 `pyproject.toml` Version을 기준으로 동적으로 수행한다.
 
 실제 AWS Account, Repository Endpoint, Token과 ARN은 문서에 기록하지 않는다.
 
 ### 21.2 CI/CD 흐름
 
 ```text
-GitHub Push
+main Push
     → GitHub Actions OIDC
     → AWS CodeBuild
     → Ruff · mypy
     → Wheel Build · Twine Check
     → Wheel 구조 검증
     → 설치된 Wheel 공개 계약 테스트
-    → 기본 Publish Skip
-    → 승인 Release Build에서만 CodeArtifact Publish
+    → Build Gate
+    → CodeArtifact Version Guard
+    → CodeArtifact Publish
+
+workflow_dispatch
+    → 동일 품질 게이트
+    → Build-only (Publish 미활성)
 ```
 
 GitHub Actions는 OIDC로 인증하고 CodeBuild를 시작한다.
 장기 AWS Access Key를 GitHub Secret에 저장하는 방식은 사용하지 않는다.
-요청 Source SHA와 CodeBuild Resolved Source SHA 일치를 확인한다.
+main Push는 CodeBuild 환경 Override로 Publish를 활성화하고 `workflow_dispatch`는 Build-only다.
+CodeBuild 프로젝트 자체 기본값 `false`는 안전장치로 유지한다.
+Build 품질 게이트 실패 시 Publish를 진행하지 않는다.
+Publish 전 동일 Version이 CodeArtifact에 존재하면 Publish를 차단한다.
 
 ### 21.3 품질 게이트
 
@@ -732,7 +742,10 @@ GitHub Actions는 OIDC로 인증하고 CodeBuild를 시작한다.
 | Wheel 구조 | 필수 Member와 금지 경로 검증 |
 | 공개 계약 테스트 | 설치된 Wheel 기준 4건 통과 |
 | Source SHA 일치 | 요청 SHA와 Resolved SHA 확인 |
-| Publish 기본값 | 비활성 유지 |
+| Build Gate | `CODEBUILD_BUILD_SUCCEEDING` 실패 시 Publish 차단 |
+| Version Guard | 동일 Version 존재 시 Publish 차단 |
+| CodeBuild 기본 Publish | `false` 안전장치 유지 |
+| main Push Publish | Override로 활성화 |
 
 ### 21.4 Consumer Contract 결과
 
@@ -749,6 +762,9 @@ pandas 관련 사실:
 - Common Package Dependency 정책 변경은 이번 문서 작업 범위가 아니다.
 
 ### 21.5 승격과 Rollback
+
+아래 흐름은 초기 Release(`1.0.0rc1` → `1.0.0`) 검증 사례다.
+현재 Package Version은 `1.0.1`이며 승격·Rollback 방식은 동일하다.
 
 ```text
 1.0.0rc1 Publish
@@ -976,7 +992,7 @@ git diff -- README.md
 | Date | Look-ahead와 Holding Days |
 | Export | `__init__.py` 공개 Symbol |
 
-2026-07-30 기준 아래 항목은 확정되어 미확정 목록에서 제외한다.
+2026-08-12 기준 아래 항목은 확정되어 미확정 목록에서 제외한다.
 
 | 항목 | 값 |
 |---|---|
@@ -985,9 +1001,9 @@ git diff -- README.md
 | Execution 직접 Import | 없음 · 직접 Consumer 아님 |
 | Legacy `utils.py` | Research가 `to_float` 직접 Import |
 | 공개 계약 테스트 | 설치된 Wheel 기준 4건 존재 |
-| Package Version | `1.0.0` |
+| Package Version | `1.0.1` |
 | Wheel 구조 | 필수 Member·금지 경로 검증 존재 |
-| CI·Publish 방식 | GitHub Actions → CodeBuild, 기본 Publish 비활성 |
+| CI·Publish 방식 | GitHub Actions → CodeBuild, main Push 자동 Publish |
 
 실제 소스 확인 없이 Public API 전체 Signature나 Reason 전체 목록까지 확정하지 않는다.
 확인되지 않은 항목을 운영 사실로 단정하지 않는다.

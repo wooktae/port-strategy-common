@@ -5,6 +5,47 @@
 현재 구조와 사용 방법은 `README.md`, 작업 규칙은 `AGENTS.md`,
 파일별 책임과 영향은 `docs/source-file-catalog.md`를 기준으로 확인한다.
 
+## 2026-08-12
+
+### Common main Push 자동 Package Release 완성
+
+| 항목 | 값 |
+|---|---|
+| Package Version | `1.0.1` |
+| 작업 성격 | Package Release 자동화 개선 |
+| Trigger | main Push 자동 + `workflow_dispatch` 유지 |
+| main Push | CodeArtifact Publish 활성화 |
+| workflow_dispatch | Build-only |
+| Canonical Version Source | `pyproject.toml` |
+| Registry | AWS CodeArtifact |
+| Strategy Version | `COMMON_STRATEGY_V1.0.0` 유지 |
+| 전략 Rule·Config·API·Dataclass·Enum·Reason | 변경 없음 |
+| Consumer Repository | 변경 없음 |
+
+### 구현 변경
+
+| 항목 | 값 |
+|---|---|
+| Package Version | `1.0.0` → `1.0.1` |
+| `verify_wheel.py` | Version 하드코딩 제거 · `pyproject.toml` 동적 검증 |
+| 공개 계약 테스트 | Package Version 하드코딩 제거 · `pyproject.toml` 동적 비교 |
+| Version Guard | 동일 Version 존재 시 Publish 차단 추가 |
+| Build Gate | Build 실패 시 Publish 차단 |
+| CodeBuild 기본 Publish | `false` 안전장치 유지 |
+| 인증·권한 정합성 | 자동 Release 실행을 위한 보완 |
+
+### Publish After-check
+
+| 항목 | 결과 |
+|---|---|
+| main Push Workflow | 자동 실행 성공 |
+| GitHub Actions → CodeBuild | 성공 |
+| CodeBuild | SUCCEEDED |
+| CodeArtifact Publish | `1.0.1` INTERNAL Package Published 확인 |
+| Wheel Asset | `port_strategy_common-1.0.1-py3-none-any.whl` 존재 확인 |
+
+상세 DevOps Architecture, IAM 책임 경계, OIDC Trust와 운영 증적은 port-devops가 관리한다.
+
 ## 2026-07-30
 
 ### Common DevOps와 Version Package 배포 구성
