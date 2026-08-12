@@ -75,20 +75,31 @@ phases:
       - source .venv-ci/bin/activate
 
       - |
+        if [ "${CODEBUILD_BUILD_SUCCEEDING:-0}" != "1" ]; then
+          echo "BUILD_GATE=FAILED"
+          echo "CODEARTIFACT_PUBLISH=BLOCKED_BUILD_FAILURE"
+          exit 1
+        fi
+
+      - echo "BUILD_GATE=SUCCESS"
+
+      - |
         export PACKAGE_VERSION="$(
           python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])'
         )"
+
       - export WHEEL_VERSION="${PACKAGE_VERSION//-/_}"
       - export WHEEL_PATH="$(find dist -maxdepth 1 -type f -name "port_strategy_common-${WHEEL_VERSION}-*.whl" 2>/dev/null | head -n 1)"
 
       - |
         if [ -z "${WHEEL_PATH}" ]; then
-          echo "WHEEL_NOT_AVAILABLE=POST_BUILD_SKIPPED"
-        else
-          export WHEEL_SHA256="$(sha256sum "${WHEEL_PATH}" | awk '{print $1}')"
-          echo "WHEEL_NAME=$(basename "${WHEEL_PATH}")"
-          echo "WHEEL_SHA256=${WHEEL_SHA256}"
+          echo "WHEEL_NOT_AVAILABLE=FAILED"
+          exit 1
         fi
+
+      - export WHEEL_SHA256="$(sha256sum "${WHEEL_PATH}" | awk '{print $1}')"
+      - echo "WHEEL_NAME=$(basename "${WHEEL_PATH}")"
+      - echo "WHEEL_SHA256=${WHEEL_SHA256}"
 
       - |
         if [ "${PUBLISH_TO_CODEARTIFACT}" = "true" ]; then
@@ -110,7 +121,8 @@ phases:
             --format pypi \
             --package "${PACKAGE_NAME}" \
             --package-version "${PACKAGE_VERSION}" \
-            >/tmp/common-existing-version.json 2>/tmp/common-existing-version.err
+            >/tmp/common-existing-version.json \
+            2>/tmp/common-existing-version.err
 
           VERSION_CHECK_RC=$?
 
@@ -135,7 +147,7 @@ phases:
         fi
 
       - |
-        if [ "${PUBLISH_TO_CODEARTIFACT}" = "true" ] && [ -n "${WHEEL_PATH}" ]; then
+        if [ "${PUBLISH_TO_CODEARTIFACT}" = "true" ]; then
           echo "=== PUBLISH TO CODEARTIFACT ==="
 
           export PYPI_ENDPOINT="$(
@@ -172,10 +184,6 @@ phases:
           unset CODEARTIFACT_AUTH_TOKEN
 
           echo "CODEARTIFACT_PUBLISH=SUCCESS"
-
-        elif [ "${PUBLISH_TO_CODEARTIFACT}" = "true" ]; then
-          echo "CODEARTIFACT_PUBLISH=FAILED_NO_WHEEL"
-          exit 1
         else
           echo "CODEARTIFACT_PUBLISH=SKIPPED"
         fi
