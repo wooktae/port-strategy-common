@@ -1,9 +1,9 @@
-import tomllib
 import unittest
 from importlib.metadata import distribution
 from pathlib import Path
 
 import port_strategy_common
+import tomllib
 from port_strategy_common.common_buy_decision import CommonBuyDecision
 from port_strategy_common.common_context import (
     CommonPositionContext,

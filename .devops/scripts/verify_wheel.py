@@ -3,9 +3,10 @@ from __future__ import annotations
 import argparse
 import hashlib
 import sys
-import tomllib
 import zipfile
 from pathlib import Path
+
+import tomllib
 
 PACKAGE_DISTRIBUTION_NAME = "port-strategy-common"
 PACKAGE_IMPORT_NAME = "port_strategy_common"
@@ -50,7 +51,7 @@ def load_project_version() -> str:
     project = pyproject.get("project")
 
     if not isinstance(project, dict):
-        raise ValueError("[project] section not found in pyproject.toml")
+        raise TypeError("[project] section must be a table in pyproject.toml")
 
     name = project.get("name")
     version = project.get("version")
