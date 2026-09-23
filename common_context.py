@@ -1,7 +1,7 @@
-"""공통 전략 판단에 입력되는 context dataclass 모음.
+"""Collection of context dataclasses fed into shared strategy decisions.
 
-시장, 종목, 보유 포지션 상태를 backtest와 daily 흐름에서 같은 형태로 전달한다.
-DB 접근, 외부 API 호출, 파일 IO 없이 caller가 준비한 값만 담는다.
+Conveys market, stock, and held-position state in the same shape across the backtest and daily flows.
+Holds only values prepared by the caller, without DB access, external API calls, or file IO.
 """
 
 from __future__ import annotations

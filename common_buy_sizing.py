@@ -1,7 +1,7 @@
-"""매수 sizing과 backtest allocation 공통 모듈.
+"""Common module for buy sizing and backtest allocation.
 
-Daily/Execution 단일 종목 sizing과 backtest 후보 리스트 allocation을 같은 설정 기준으로 계산한다.
-금액과 수량 계산만 담당하며 주문 제출, DB 저장, 외부 API 호출은 수행하지 않는다.
+Computes Daily/Execution single-stock sizing and backtest candidate list allocation under the same configuration criteria.
+It handles only amount and quantity calculation, and does not perform order submission, DB storage, or external API calls.
 """
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ from port_strategy_common.common_utils import (
 
 
 # =========================================================
-# Daily / Execution 단일 종목 sizing 함수
+# Daily / Execution single-stock sizing function
 # =========================================================
 
 def common_calculate_buy_sizing(
@@ -37,11 +37,11 @@ def common_calculate_buy_sizing(
     current_position_count: int = 0,
 ) -> CommonSizingDecision:
     """
-    BUY sizing 공통 계산 함수.
+    Common BUY sizing calculation function.
 
-    이 함수는 Daily / Execution용 단일 종목 sizing skeleton.
-    Backtest 기존 allocate_positions()와는 별도이며,
-    기존 backtest 동일성 검증은 common_allocate_positions()에서 처리.
+    This function is the single-stock sizing skeleton for Daily / Execution.
+    It is separate from the existing backtest allocate_positions(),
+    and equivalence validation against the existing backtest is handled in common_allocate_positions().
     """
 
     price = common_safe_float(stock.close_price, 0.0)
@@ -233,7 +233,7 @@ def _common_calculate_guard_multiplier(
 
 
 # =========================================================
-# Backtest 기존 allocate_positions()와 1:1 동일한 함수
+# Function that is 1:1 identical to the existing backtest allocate_positions()
 # =========================================================
 
 def common_allocate_positions(
@@ -242,16 +242,16 @@ def common_allocate_positions(
     config: dict | None = None,
 ) -> list[dict[str, Any]]:
     """
-    기존 backtest_sizing.allocate_positions()와 동일한 리스트 allocation 함수.
+    List allocation function identical to the existing backtest_sizing.allocate_positions().
 
-    역할:
-    1. 후보별 raw_rank_score 계산
-    2. volatility penalty 적용해서 adj_score 계산
-    3. adj_score / final_score / flow_score 기준 정렬
-    4. max_positions 만큼 cut
-    5. adj_score 비율로 base_exposure 배분
-    6. min/max position_size clamp
-    7. 전체 position_size 합이 base_exposure 초과 시 비례 축소
+    Role:
+    1. Compute raw_rank_score per candidate
+    2. Apply the volatility penalty to compute adj_score
+    3. Sort by adj_score / final_score / flow_score
+    4. Cut to max_positions
+    5. Distribute base_exposure by the adj_score ratio
+    6. Clamp to min/max position_size
+    7. Scale down proportionally when the total position_size sum exceeds base_exposure
     """
 
     base = _d(market_decision.base_exposure)
@@ -320,7 +320,7 @@ def common_calculate_rank_score(
     config: dict | None = None,
 ) -> tuple[Decimal, Decimal]:
     """
-    기존 backtest_sizing.py의 raw_rank_score / adj_score 계산과 동일.
+    Same as the raw_rank_score / adj_score calculation in the existing backtest_sizing.py.
     """
 
     final_score = _d(row.get("final_score"))
@@ -354,12 +354,12 @@ def common_calculate_rank_score(
 
 def common_allocation_sort_key(row: dict[str, Any]):
     """
-    기존 backtest_sizing.py sort key와 동일.
+    Same as the sort key in the existing backtest_sizing.py.
 
-    reverse=True와 함께 사용:
-    - adj_score 높은 순
-    - final_score 높은 순
-    - flow_score 높은 순
+    Used with reverse=True:
+    - highest adj_score first
+    - highest final_score first
+    - highest flow_score first
     """
 
     return (
@@ -396,15 +396,15 @@ def common_apply_backtest_buy_size_haircut(
     config: dict | None = None,
 ) -> tuple[float, dict[str, Any]]:
     """
-    기존 backtest_buy_logic.py의 BUY toxic flag 기반 size haircut과 동일.
+    Same as the BUY toxic-flag-based size haircut in the existing backtest_buy_logic.py.
 
-    기존 로직:
+    Existing logic:
     - hot_chase                  → size *= 0.1
     - buy_day_stop_risk          → size *= 0.1
     - mid_flow_tight_range_risk  → size *= 0.1
     - flow_0_9_plus_soft         → size *= 0.70
 
-    우선순위도 기존 elif 순서와 동일:
+    The priority also matches the existing elif order:
     hot_chase > buy_day_stop_risk > mid_flow_tight_range_risk > flow_0_9_plus_soft
     """
 
@@ -489,7 +489,7 @@ def common_build_backtest_buy_info(
     position_size: float,
 ) -> dict[str, Any]:
     """
-    기존 backtest_buy_logic.py의 build_buy_info() + toxic flag 저장 구조와 동일한 buy_info 생성 helper.
+    Helper that builds buy_info with the same structure as build_buy_info() + toxic flag storage in the existing backtest_buy_logic.py.
     """
 
     flags = guard.detail.get("risk_flags", {}) if guard and guard.detail else {}

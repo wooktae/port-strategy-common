@@ -1,98 +1,97 @@
 # port_strategy_common
 
-`port_strategy_common`은 전략 판단 로직과 Consumer 공통 계약을 제공하는
-Python 전략 판단 코어다.
+`port_strategy_common` is the Python strategy decision core that provides
+strategy decision logic and the common Consumer contracts.
 
-시장·매수·매도 판단, Sizing, Guard, Context, Result, Enum,
-Config와 Version Metadata를 공통 계약으로 제공한다.
+It provides Market Decision, Buy Decision, Sell Decision, Sizing, Guard, Context, Result, Enum,
+Config, and Version Metadata as common contracts.
 
-설계 목적상 StrategyResearch, StrategyDecision과 StrategyExecution의
-전략 계약 정렬 대상이다.
-현재 직접 Import Consumer는 StrategyResearch와 StrategyDecision이다.
-StrategyExecution은 현재 `port_strategy_common`을 직접 Import하지 않는다.
+By design, it is the strategy contract alignment target for StrategyResearch, StrategyDecision, and StrategyExecution.
+The current direct-import Consumers are StrategyResearch and StrategyDecision.
+StrategyExecution currently does not import `port_strategy_common` directly.
 
-Common 자체는 독립 실행 서비스가 아니다.
-Versioned Python Package로 Build되어 각 Consumer가 Context와 Config를 전달하면
-순수 판단 결과를 반환하는 공통 라이브러리다.
+Common is not a standalone runtime service.
+It is built as a Versioned Python Package, and it is a shared library that returns
+pure decision results when each Consumer passes in a Context and Config.
 
-## 1. 서비스 요약
+## 1. Service Summary
 
-| 항목 | 값 |
+| Item | Value |
 |---|---|
 | Package Name | `port-strategy-common` |
 | Import Package | `port_strategy_common` |
-| 주 책임 | 전략 판단 로직과 Consumer 공통 계약 제공 |
-| 실행 형태 | Consumer가 Import하는 Versioned Python Package |
+| Primary responsibility | Provide strategy decision logic and the common Consumer contracts |
+| Execution form | Versioned Python Package imported by Consumers |
 | Package Version | `1.0.1` |
 | Strategy Version | `COMMON_STRATEGY_V1.0.0` |
 | Artifact | Python Wheel |
 | Registry | AWS CodeArtifact |
 | Build | GitHub Actions → AWS CodeBuild |
-| Release | main Push 자동 Versioned Package Publish |
-| 수동 실행 | `workflow_dispatch` Build-only |
-| Rollback | 이전 Published Version Pin 재설치 |
-| 주요 입력 | Context Dataclass와 Config Dictionary |
-| 주요 출력 | Result Dataclass, Enum, Reason, Detail |
-| 직접 Consumer | StrategyResearch, StrategyDecision |
-| 직접 실행 | 하지 않음 |
-| DB | 직접 접근하지 않음 |
-| 외부 API | 직접 호출하지 않음 |
-| File IO | 전략 Module에서 수행하지 않음 |
-| 기본 원칙 | 동일 입력과 동일 Config에는 동일 결과 반환 |
-| 문서 기준 | 현재 파일 구조와 소스의 정적 확인 결과 |
+| Release | Automatic Versioned Package publish on main Push |
+| Manual run | `workflow_dispatch` Build-only |
+| Rollback | Reinstall pinned to the previously published Version |
+| Primary input | Context Dataclass and Config Dictionary |
+| Primary output | Result Dataclass, Enum, Reason, Detail |
+| Direct Consumer | StrategyResearch, StrategyDecision |
+| Direct execution | Not performed |
+| DB | Not accessed directly |
+| External API | Not called directly |
+| File IO | Not performed in strategy Modules |
+| Core principle | Return the same result for the same input and the same Config |
+| Documentation basis | Static confirmation of the current file structure and source |
 
-## 2. 주요 책임
+## 2. Primary Responsibilities
 
-| 영역 | 책임 |
+| Area | Responsibility |
 |---|---|
-| Context | Market·Stock·Position 입력 구조 |
-| Result | Market·Filter·Guard·Sizing·BUY·SELL 결과 구조 |
+| Context | Market·Stock·Position input structure |
+| Result | Market·Filter·Guard·Sizing·BUY·SELL result structure |
 | Types | Signal·Side·Status·Position·Execution Mode Enum |
-| Market | Regime과 Exposure 판단 |
-| BUY Filter | 매수 가능 조건 판정 |
-| BUY Guard | 매수 Risk 제한 |
-| BUY Sizing | 목표 비중·금액·수량 계산 |
+| Market | Regime and Exposure decision |
+| BUY Filter | Judge buy eligibility conditions |
+| BUY Guard | Limit buy Risk |
+| BUY Sizing | Compute target weight·amount·quantity |
 | BUY Decision | Filter·Guard·Sizing Orchestration |
-| SELL Guard | 매도 Risk Flag와 Guard |
-| SELL Decision | SELL·HOLD 판단과 Backtest 호환 평가 |
-| Block Watch | 공통 Block·Watch 조건 |
-| Config | Strategy Config와 Runtime Snapshot |
+| SELL Guard | Sell Risk Flag and Guard |
+| SELL Decision | SELL·HOLD decision and Backtest-compatible evaluation |
+| Block Watch | Common Block·Watch conditions |
+| Config | Strategy Config and Runtime Snapshot |
 | Version | Strategy·Engine Version Metadata |
-| Utility | 공통 순수 Helper |
+| Utility | Common pure Helper |
 
-## 3. 책임 경계
+## 3. Responsibility Boundary
 
-Common은 판단 로직과 계약만 제공한다.
+Common provides only decision logic and contracts.
 
-| 영역 | 담당 |
+| Area | Owner |
 |---|---|
-| 원천 데이터 수집 | Crawler |
-| Raw 전처리와 Feature 생성 | Preprocessor |
-| Daily Signal DB 저장 | StrategyDecision |
-| Daily Position Decision 저장 | StrategyDecision |
-| Backtest·Trade·Report 저장 | StrategyResearch |
-| Execution Plan·Order·Position 저장 | StrategyExecution |
+| Source data collection | Crawler |
+| Raw preprocessing and Feature generation | Preprocessor |
+| Daily Signal DB storage | StrategyDecision |
+| Daily Position Decision storage | StrategyDecision |
+| Backtest·Trade·Report storage | StrategyResearch |
+| Execution Plan·Order·Position storage | StrategyExecution |
 | Broker·KIS API | MarketConnector |
-| 화면과 승인 UI | port-view |
-| 전체 Daily Orchestration | Scheduler와 Step Functions |
-| DB Connection·Persistence | 각 Consumer MS |
-| 공통 판단·계약 | StrategyCommon |
+| Screens and approval UI | port-view |
+| Full Daily Orchestration | Scheduler and Step Functions |
+| DB Connection·Persistence | Each Consumer MS |
+| Common decision·contracts | StrategyCommon |
 
-Common에 아래 책임을 추가하지 않는다.
+Do not add the following responsibilities to Common.
 
-- DB Connection과 SQL
+- DB Connection and SQL
 - HTTP·Broker Client
 - AWS SDK
 - File Persistence
-- Consumer DB Row 직접 처리
-- Scheduler·State Machine 실행
-- 주문 생성·제출·체결
-- Report·Slack·View 렌더링
+- Direct handling of Consumer DB Rows
+- Scheduler·State Machine execution
+- Order creation·submission·fill
+- Report·Slack·View rendering
 
-## 4. Consumer 관계
+## 4. Consumer Relationships
 
-Common은 Consumer 내부 구현을 소유하지 않는다.
-Consumer는 자신의 입력을 Common Context로 변환하고 결과를 저장·표시한다.
+Common does not own the Consumer internal implementation.
+Each Consumer converts its own input into a Common Context and stores·displays the result.
 
 ```text
 Crawler · Preprocessor · DB Row
@@ -115,166 +114,166 @@ Crawler · Preprocessor · DB Row
 
 ### 4.1 StrategyResearch
 
-| 항목 | 값 |
+| Item | Value |
 |---|---|
-| 주요 사용 | Market·BUY·SELL·Sizing·Config·Version |
-| 목적 | Backtest 판단과 공통 Rule 재사용 |
-| Consumer 책임 | Backtest Run·Trade·Metric·Report 저장 |
-| 주의 | Research 가격 시점이 Look-ahead를 만들지 않아야 함 |
+| Primary use | Market·BUY·SELL·Sizing·Config·Version |
+| Purpose | Reuse common Rules for Backtest decisions |
+| Consumer responsibility | Store Backtest Run·Trade·Metric·Report |
+| Caution | The Research price timing must not create Look-ahead |
 
 ### 4.2 StrategyDecision
 
-| 항목 | 값 |
+| Item | Value |
 |---|---|
-| 주요 사용 | Market·Filter·Guard·Sizing·BUY·SELL·Block Watch |
-| 목적 | Daily 운영 판단에 공통 Rule 적용 |
-| Consumer 책임 | Daily Signal·Position Decision 저장 |
-| 주의 | DB·Feature Row를 Context로 변환하는 Adapter 유지 |
+| Primary use | Market·Filter·Guard·Sizing·BUY·SELL·Block Watch |
+| Purpose | Apply common Rules to Daily operational decisions |
+| Consumer responsibility | Store Daily Signal·Position Decision |
+| Caution | Maintain the Adapter that converts DB·Feature Rows into a Context |
 
 ### 4.3 StrategyExecution
 
-| 항목 | 값 |
+| Item | Value |
 |---|---|
-| 현재 상태 | `port_strategy_common`을 직접 Import하지 않음 |
-| 소스 근거 | Common Config를 직접 사용하지 않는다는 주석만 존재 |
-| 설계 목적 | 실행 후보 이전 단계의 공통 의미 정렬 대상 |
-| Consumer 책임 | Plan·Order·Fill·Position 저장 |
-| 승격 조건 | 향후 직접 Import 추가 시 직접 Consumer로 기록 |
+| Current state | Does not import `port_strategy_common` directly |
+| Source basis | Only a comment stating that Common Config is not used directly |
+| Design purpose | Common-meaning alignment target for the stage before execution candidates |
+| Consumer responsibility | Store Plan·Order·Fill·Position |
+| Promotion condition | Record as a direct Consumer once a direct Import is added in the future |
 
-StrategyExecution은 설계상 계약 정렬 대상이지만 현재 직접 Consumer는 아니다.
-현재 직접 Consumer Contract Test 대상도 아니다.
+StrategyExecution is a contract alignment target by design, but it is not currently a direct Consumer.
+It is also not currently a direct Consumer Contract Test target.
 
-### 4.4 기타 MS
+### 4.4 Other MS
 
-View, Crawler, Preprocessor와 MarketConnector가 Common을 직접 Import하는지는
-실제 Import 근거가 있을 때만 기록한다.
+Whether View, Crawler, Preprocessor, and MarketConnector import Common directly
+is recorded only when there is actual Import evidence.
 
-간접적으로 문자열이나 DB 결과를 소비한다는 이유만으로
-Common Consumer라고 단정하지 않는다.
+Do not conclude a service is a Common Consumer merely because it
+indirectly consumes strings or DB results.
 
-## 5. 설계 원칙
+## 5. Design Principles
 
-### 5.1 순수 함수
+### 5.1 Pure Functions
 
-`common_*` 전략 Module은 순수 함수 중심으로 유지한다.
+The `common_*` strategy Modules are kept centered on pure functions.
 
-| 금지 의존 | 이유 |
+| Prohibited dependency | Reason |
 |---|---|
-| DB | Consumer Persistence와 결합 방지 |
-| HTTP·API | 외부 상태 의존 방지 |
-| File IO | 호출 순서와 환경 의존 방지 |
-| 환경변수 직접 조회 | 입력 계약 불투명화 방지 |
-| 현재 시각 직접 조회 | 재현성 저하 방지 |
-| Seed 없는 Random | 비결정적 결과 방지 |
-| Global Mutation | 테스트 순서 의존 방지 |
+| DB | Prevent coupling with Consumer Persistence |
+| HTTP·API | Prevent dependence on external state |
+| File IO | Prevent dependence on call order and environment |
+| Direct environment variable lookup | Prevent making the input contract opaque |
+| Direct current-time lookup | Prevent reduced reproducibility |
+| Random without a Seed | Prevent nondeterministic results |
+| Global Mutation | Prevent dependence on test order |
 
-판단 함수는 Argument, Context와 Config를 통해 필요한 값을 받는다.
+Decision functions receive the values they need through Arguments, a Context, and a Config.
 
-### 5.2 결정론
+### 5.2 Determinism
 
-동일한 입력과 동일한 Config에는 동일한 결과를 반환해야 한다.
+The same input and the same Config must return the same result.
 
-다음 요소가 결과에 암묵적으로 영향을 주면 안 된다.
+The following factors must not implicitly affect the result.
 
-- 현재 시각
+- Current time
 - Timezone
 - Locale
-- 호출 순서
+- Call order
 - Global Mutable State
-- Dictionary 원본 Mutation
-- Unordered Collection 순서
-- Seed 없는 Random
-- Consumer 실행 환경
+- Mutation of the original Dictionary
+- Order of an Unordered Collection
+- Random without a Seed
+- The Consumer execution environment
 
-### 5.3 Consumer 독립성
+### 5.3 Consumer Independence
 
-Common은 특정 Consumer의 DB Schema나 Row 구조를 직접 알지 않는다.
+Common does not directly know a specific Consumer's DB Schema or Row structure.
 
 ```text
 Consumer Row
   → Consumer Adapter
   → Common Context
   → Common Result
-  → Consumer 저장 구조
+  → Consumer storage structure
 ```
 
-Consumer별 Adapter 차이로 결과가 달라질 수 있다면,
-그 차이는 Consumer에서 명시적으로 관리한다.
+If differences in per-Consumer Adapters can change results,
+those differences are managed explicitly in the Consumer.
 
-## 6. 공개 계약
+## 6. Public API
 
-Common은 여러 Consumer가 함께 사용하는 공개 계약이다.
+Common is a Public API used together by multiple Consumers.
 
-| 계약 | 예시 |
+| Contract | Example |
 |---|---|
 | Module Path | `port_strategy_common.common_market` |
-| 함수명 | `common_decide_market` |
-| Parameter | 이름·순서·Default |
+| Function name | `common_decide_market` |
+| Parameter | name·order·Default |
 | Return Type | Result Dataclass |
-| Context Field | 입력 필드명·Type·Default |
+| Context Field | input field name·Type·Default |
 | Result Field | Signal·Reason·Detail |
-| Enum Value | 직렬화되는 문자열 |
-| Reason | 집계·Report·View 기준 문자열 |
+| Enum Value | Serialized string |
+| Reason | Reason string used for aggregation·Report·View |
 | Config Key | Consumer Override Key |
-| Export | `__init__.py` 공개 Symbol |
+| Export | `__init__.py` public Symbol |
 | Version | Strategy·Engine Metadata |
 
-모든 Consumer를 함께 수정하고 검증하지 않는 한 아래 변경을 하지 않는다.
+Do not make the following changes unless all Consumers are modified and validated together.
 
-- 공개 함수 Rename
-- Parameter Rename·순서 변경
-- 필수 Parameter 추가
-- Return Type 변경
-- Dataclass Field 삭제·Rename
-- Enum Value 변경
-- Reason 문자열 수정
-- Config Key 삭제·Rename
-- Module 이동
-- Package Export 제거
+- Rename a public function
+- Rename a Parameter or change its order
+- Add a required Parameter
+- Change the Return Type
+- Delete·Rename a Dataclass Field
+- Change an Enum Value
+- Modify a Reason string
+- Delete·Rename a Config Key
+- Move a Module
+- Remove a Package Export
 
-## 7. Context 계약
+## 7. Context Contract
 
-`common_context.py`는 Common 입력 계약을 정의한다.
+`common_context.py` defines the Common input contract.
 
-주요 Context는 실제 코드에서 확인한다.
+Confirm the primary Contexts in the actual code.
 
-| Context | 개념 역할 |
+| Context | Conceptual role |
 |---|---|
-| Market Context | 시장 Regime 판단 입력 |
-| Stock Context | 종목 BUY·Filter·Guard 입력 |
-| Position Context | SELL·HOLD 판단 입력 |
+| Market Context | Input for market Regime decisions |
+| Stock Context | Input for per-stock BUY·Filter·Guard |
+| Position Context | Input for SELL·HOLD decisions |
 
-Context 변경 시 아래를 확인한다.
+When changing a Context, confirm the following.
 
-| 항목 | 확인 내용 |
+| Item | Confirmation content |
 |---|---|
 | Field Name | Consumer Keyword Argument |
-| Field Order | Positional 생성 여부 |
-| Type | 숫자·문자열·날짜 계약 |
-| Default | 기존 Consumer 생략 가능 여부 |
-| Optional | Missing Input 의미 |
-| Unit | 가격·비율·수량 |
+| Field Order | Whether Positional construction is used |
+| Type | Numeric·string·date contract |
+| Default | Whether existing Consumers can omit it |
+| Optional | Meaning of Missing Input |
+| Unit | Price·ratio·quantity |
 | Date | Trade·Feature·Evaluation Date |
-| Serialization | `asdict`·JSON·Snapshot 사용 |
-| Mutability | Frozen·Mutable 여부 |
+| Serialization | Use of `asdict`·JSON·Snapshot |
+| Mutability | Whether Frozen·Mutable |
 
-Context는 DB Row 자체가 아니다.
-DB Column을 Common Field로 직접 강제하지 않는다.
+A Context is not a DB Row itself.
+Do not force DB Columns directly into Common Fields.
 
-## 8. Result 계약
+## 8. Result Contract
 
-`common_result.py`는 Common 판단 결과 계약을 정의한다.
+`common_result.py` defines the Common decision result contract.
 
-| 구분 | 용도 |
+| Category | Use |
 |---|---|
-| Signal | Consumer 분기 |
-| Status | 처리 상태 |
-| Reason | 집계·표시·저장 |
+| Signal | Consumer branching |
+| Status | Processing status |
+| Reason | Aggregation·display·storage |
 | Numeric Result | Exposure·Weight·Amount·Quantity |
-| Guard Flag | Risk 제한 |
-| Detail | 진단용 Payload |
+| Guard Flag | Risk limit |
+| Detail | Diagnostic Payload |
 
-다음 값의 의미를 임의로 바꾸지 않는다.
+Do not arbitrarily change the meaning of the following values.
 
 - `None`
 - 0
@@ -283,111 +282,111 @@ DB Column을 Common Field로 직접 강제하지 않는다.
 - False
 - Missing Field
 
-Mutable Default는 `default_factory`를 사용한다.
+Use `default_factory` for a Mutable Default.
 
-## 9. Enum 계약
+## 9. Enum Contract
 
-`common_types.py`는 공통 상태와 Signal 문자열을 제공한다.
+`common_types.py` provides common status and Signal strings.
 
-개념상 아래 유형을 포함할 수 있다.
+Conceptually it may include the following types.
 
-| Enum | 역할 |
+| Enum | Role |
 |---|---|
-| Market Signal | 시장 상태 |
+| Market Signal | Market state |
 | Trade Signal | BUY·SELL·HOLD·SKIP |
-| Order Side | BUY·SELL 방향 |
-| Decision Status | 판단 처리 상태 |
-| Position Status | 전략 Position 상태 |
-| Execution Mode | Dry Run·Paper·Live 경계 |
+| Order Side | BUY·SELL direction |
+| Decision Status | Decision processing status |
+| Position Status | Strategy Position status |
+| Execution Mode | Dry Run·Paper·Live boundary |
 
-실제 Class와 Value는 코드에서 확인한다.
+Confirm the actual Class and Value in the code.
 
-- Enum Member 이름을 임의 변경하지 않는다.
-- Enum Value의 대소문자를 바꾸지 않는다.
-- Alias 추가도 Serialization 영향을 확인한다.
-- 코드에 없는 Enum이나 Value를 문서 편의상 추가하지 않는다.
+- Do not arbitrarily change an Enum Member name.
+- Do not change the case of an Enum Value.
+- For an added Alias, also confirm the Serialization impact.
+- Do not add an Enum or Value that is not in the code for documentation convenience.
 
-## 10. Decision Reason 계약
+## 10. Decision Reason Contract
 
-Reason 문자열은 단순 설명 문구가 아닐 수 있다.
+A Reason string may not be a mere descriptive phrase.
 
-Consumer는 Reason을 아래 용도로 사용할 수 있다.
+A Consumer may use a Reason for the following purposes.
 
-- DB 저장
-- Report 집계
-- Slack 문구
-- View 표시
+- DB storage
+- Report aggregation
+- Slack phrasing
+- View display
 - Test Fixture
-- Backtest와 Daily 비교
-- 운영 진단
+- Backtest vs Daily comparison
+- Operational diagnostics
 
-따라서 오탈자 수정이나 문장 다듬기도 호환성 변경일 수 있다.
+Therefore, even a typo fix or wording cleanup may be a compatibility change.
 
-새 Reason을 추가할 때는 아래를 확인한다.
+When adding a new Reason, confirm the following.
 
-| 항목 | 확인 내용 |
+| Item | Confirmation content |
 |---|---|
-| 발생 조건 | 어떤 입력에서 반환되는지 |
-| 우선순위 | 여러 조건 동시 발생 시 선택 기준 |
-| Consumer | 문자열 비교와 집계 |
-| Detail | 설명을 Detail로 분리할 수 있는지 |
-| Test | 기존 Fixture와 Expected 결과 |
+| Occurrence condition | Which input returns it |
+| Priority | Selection criterion when multiple conditions occur simultaneously |
+| Consumer | String comparison and aggregation |
+| Detail | Whether the explanation can be split into Detail |
+| Test | Existing Fixtures and Expected results |
 
-## 11. Config 계약
+## 11. Config Contract
 
-`config.py`는 전략 상수와 Runtime Config Dictionary를 제공한다.
+`config.py` provides strategy constants and the Runtime Config Dictionary.
 
-개념상 다음 영역을 포함할 수 있다.
+Conceptually it may include the following areas.
 
-| Config | 역할 |
+| Config | Role |
 |---|---|
-| Strategy | Strategy Name과 Version |
+| Strategy | Strategy Name and Version |
 | Market | Regime·Exposure Threshold |
-| Filter | BUY 가능 조건 |
-| Guard | Risk 제한 |
+| Filter | BUY eligibility conditions |
+| Guard | Risk limit |
 | Sizing | Weight·Amount·Quantity |
 | BUY | BUY Decision Rule |
 | SELL | SELL·HOLD Rule |
-| Report | Consumer 출력 설정 |
+| Report | Consumer output settings |
 
-실제 Key와 구조는 코드에서 확인한다.
+Confirm the actual Keys and structure in the code.
 
-Config 변경은 전략 결과 변경으로 취급한다.
+Treat a Config change as a strategy result change.
 
-| 변경 | 영향 |
+| Change | Impact |
 |---|---|
-| Threshold | Boundary Signal 변화 |
-| Default | Override 없는 Consumer 전체 |
+| Threshold | Boundary Signal change |
+| Default | All Consumers without an Override |
 | Weight | Exposure·Sizing |
-| Max Positions | Portfolio 제한 |
-| Minimum Score | BUY 후보 수 |
-| Sell Rule | SELL·HOLD 결과 |
-| Key Rename | Consumer Override 실패 |
+| Max Positions | Portfolio limit |
+| Minimum Score | Number of BUY candidates |
+| Sell Rule | SELL·HOLD result |
+| Key Rename | Consumer Override failure |
 
-## 12. Runtime Config와 Snapshot
+## 12. Runtime Config and Snapshot
 
-`get_runtime_config()`와 `get_config_snapshot()` 계열이 있다면
-전략 설정만 반환해야 한다.
+If `get_runtime_config()` and `get_config_snapshot()` families exist,
+they must return only strategy settings.
 
-확인할 계약은 아래와 같다.
+The contracts to confirm are as follows.
 
-| 항목 | 기준 |
+| Item | Criterion |
 |---|---|
-| Copy | 호출마다 독립 객체 반환 |
-| Nested Copy | Nested Dictionary Mutation 격리 |
-| Override | 원본 Config 변경 금지 |
-| Unknown Key | 실제 처리 정책 확인 |
-| Serialization | JSON 가능한 값 사용 |
-| Secret | 포함 금지 |
-| Version | Snapshot과 Metadata 연결 |
+| Copy | Return an independent object on each call |
+| Nested Copy | Isolate Nested Dictionary Mutation |
+| Override | Prohibit changing the original Config |
+| Unknown Key | Confirm the actual handling policy |
+| Serialization | Use JSON-capable values |
+| Secret | Prohibited to include |
+| Version | Link the Snapshot with the Metadata |
 
-Caller가 반환 Dictionary를 수정해도 다음 호출 결과가 바뀌지 않아야 한다.
+Even if a Caller modifies the returned Dictionary, the result of the next call must not change.
 
-## 13. Market 판단
+## 13. Market Decision
 
-`common_market.py`는 Market Context를 시장 판단 결과로 변환한다.
+`common_market.py` converts a Market Context into a market decision result.
 
-개념 흐름은 아래와 같다.
+The conceptual flow is as follows.
 
 ```text
 Market Regime Score
@@ -403,7 +402,7 @@ Minimum Score
 Reason · Detail
 ```
 
-변경 시 아래를 확인한다.
+When changing it, confirm the following.
 
 - Threshold
 - Exposure
@@ -415,13 +414,13 @@ Reason · Detail
 - Detail
 - Missing Value
 - NaN·Inf
-- Boundary 비교
+- Boundary comparison
 
-Threshold와 정확히 같은 값에서 `<`, `<=`, `>`, `>=` 차이를 확인한다.
+At a value exactly equal to the Threshold, confirm the difference between `<`, `<=`, `>`, and `>=`.
 
-## 14. BUY 판단 흐름
+## 14. BUY Decision Flow
 
-BUY 판단은 여러 책임을 조합한다.
+The BUY decision composes multiple responsibilities.
 
 ```text
 Market Decision
@@ -439,29 +438,29 @@ BUY Sizing
 BUY or SKIP
 ```
 
-실제 호출 순서는 `common_buy_decision.py`에서 확인한다.
+Confirm the actual call order in `common_buy_decision.py`.
 
 ### 14.1 BUY Filter
 
-`common_buy_filter.py`는 매수 가능 조건을 판단한다.
+`common_buy_filter.py` judges buy eligibility conditions.
 
-확인 대상:
+Confirmation targets:
 
-- Market BUY 허용
+- Market BUY allowance
 - Final Score
 - Flow·Liquidity·Quality
 - Block·Watch
 - Minimum Score
 - Missing Input
-- Reason 우선순위
+- Reason priority
 
-Filter는 주문 수량을 계산하지 않는다.
+The Filter does not compute order quantity.
 
 ### 14.2 BUY Guard
 
-`common_buy_guard.py`는 BUY Risk를 제한한다.
+`common_buy_guard.py` limits BUY Risk.
 
-확인 대상:
+Confirmation targets:
 
 - Market Guard
 - Exposure
@@ -471,45 +470,45 @@ Filter는 주문 수량을 계산하지 않는다.
 - Cash Guard
 - Haircut
 - Risk Flag
-- Reason 우선순위
+- Reason priority
 
-Guard는 DB를 조회하거나 Order를 생성하지 않는다.
+The Guard does not query the DB or create an Order.
 
 ### 14.3 BUY Sizing
 
-`common_buy_sizing.py`는 목표 Weight·Amount·Quantity를 계산한다.
+`common_buy_sizing.py` computes the target Weight·Amount·Quantity.
 
-| 입력 | 확인 내용 |
+| Input | Confirmation content |
 |---|---|
-| Available Cash | 사용 가능한 현금 |
-| Target Weight | 목표 비중 |
-| Current Exposure | 현재 노출 |
-| Position Value | 기존 보유 가치 |
-| Price | 계산 기준 가격 |
-| Maximum Amount | 주문 상한 |
-| Minimum Amount | 최소 금액 |
-| Haircut | Risk 조정 |
-| Rounding | 수량 정수화 |
+| Available Cash | Usable cash |
+| Target Weight | Target weight |
+| Current Exposure | Current exposure |
+| Position Value | Existing holding value |
+| Price | Calculation reference price |
+| Maximum Amount | Order cap |
+| Minimum Amount | Minimum amount |
+| Haircut | Risk adjustment |
+| Rounding | Quantity integerization |
 
-Common은 Broker 호가 단위와 실제 주문 가능 수량을 직접 조회하지 않는다.
+Common does not directly query the Broker tick size or the actual orderable quantity.
 
 ### 14.4 BUY Decision
 
-`common_buy_decision.py`는 Filter·Guard·Sizing 결과를 조합한다.
+`common_buy_decision.py` composes the Filter·Guard·Sizing results.
 
-확인 대상:
+Confirmation targets:
 
-- Short-circuit 순서
-- 최종 Signal
-- 최종 Reason
+- Short-circuit order
+- Final Signal
+- Final Reason
 - Detail Merge
-- 중복 Key 덮어쓰기
-- 실패 이후 불필요한 계산
-- Market 결과와 최종 BUY 모순
+- Duplicate Key overwrite
+- Unnecessary computation after a failure
+- Contradiction between the Market result and the final BUY
 
-## 15. SELL 판단 흐름
+## 15. SELL Decision Flow
 
-SELL 판단은 Position Context와 Guard를 사용한다.
+The SELL decision uses the Position Context and the Guard.
 
 ```text
 Position Context
@@ -525,24 +524,24 @@ Reason · Detail
 
 ### 15.1 SELL Guard
 
-`common_sell_guard.py` 변경 시 아래를 확인한다.
+When changing `common_sell_guard.py`, confirm the following.
 
-- Position 상태
+- Position status
 - Holding Period
 - Stop Loss
 - Take Profit
 - Current Price
 - Entry Price
-- Market 상태
+- Market status
 - Missing Value
 - Risk Flag
-- Reason 우선순위
+- Reason priority
 
 ### 15.2 SELL Decision
 
-`common_sell_decision.py`는 최종 SELL·HOLD 결과를 반환한다.
+`common_sell_decision.py` returns the final SELL·HOLD result.
 
-확인 대상:
+Confirmation targets:
 
 - Current Price
 - Entry Price
@@ -554,65 +553,65 @@ Reason · Detail
 - Reason
 - Detail
 
-### 15.3 Backtest 호환 평가
+### 15.3 Backtest-Compatible Evaluation
 
-`common_evaluate_backtest_sell`은 Backtest 호환 계약으로 취급한다.
+`common_evaluate_backtest_sell` is treated as a Backtest-compatible contract.
 
-- 공개 함수명을 유지한다.
-- Parameter와 Return 계약을 유지한다.
-- 가격 시점이 Look-ahead를 만들지 않는지 확인한다.
-- Daily와 Backtest 입력 차이는 Adapter에서 처리한다.
-- 동일 Context와 Config에서는 동일 결과를 유지한다.
+- Keep the public function name.
+- Keep the Parameter and Return contract.
+- Confirm that the price timing does not create Look-ahead.
+- Differences between Daily and Backtest input are handled in the Adapter.
+- The same Context and Config keep the same result.
 
 ## 16. Block Watch
 
-`common_block_watch.py`는 Block·Watch 공통 판단을 제공한다.
+`common_block_watch.py` provides the common Block·Watch decision.
 
-| 상태 | 확인할 의미 |
+| State | Meaning to confirm |
 |---|---|
-| Block | BUY 금지 여부 |
-| Watch | 감시·감점·조건부 허용 여부 |
-| Release | 해제 조건 |
-| Period | 적용 기간 |
-| Reason | 결과 설명 |
+| Block | Whether BUY is prohibited |
+| Watch | Whether it is monitoring·penalizing·conditionally allowing |
+| Release | Release condition |
+| Period | Application period |
+| Reason | Result explanation |
 
-Block과 Watch를 같은 상태로 처리하지 않는다.
+Do not treat Block and Watch as the same state.
 
-날짜가 포함되면 거래일과 Calendar Date를 구분한다.
+When a date is involved, distinguish the trading day from the Calendar Date.
 
-## 17. 수치 안전
+## 17. Numeric Safety
 
-Common은 전략 수치를 직접 계산하므로 Boundary가 중요하다.
+Because Common computes strategy numbers directly, Boundaries are important.
 
-확인 대상:
+Confirmation targets:
 
-- Float·Decimal 혼용
+- Mixing Float·Decimal
 - NaN
 - Inf
-- 0 Division
-- 음수
+- Division by 0
+- Negatives
 - Missing Value
 - Clipping
 - Min·Max
 - Rounding
-- 단위
-- Quantity 정수 여부
+- Unit
+- Whether Quantity is an integer
 
-| 위험 | 기준 |
+| Risk | Criterion |
 |---|---|
-| 비율 | 0~1과 0~100 구분 |
-| 가격 | Currency 단위 확인 |
-| 수량 | 음수와 소수 방지 |
-| 현금 | 여러 후보 공유 여부는 Consumer 책임 확인 |
-| Exact 비교 | Float 허용 오차 검토 |
-| NaN | 정상 False로 조용히 통과하지 않음 |
+| Ratio | Distinguish 0~1 from 0~100 |
+| Price | Confirm the Currency unit |
+| Quantity | Prevent negatives and fractions |
+| Cash | Confirm the Consumer responsibility for whether it is shared across candidates |
+| Exact comparison | Consider a Float tolerance |
+| NaN | Do not silently pass as a normal False |
 
-## 18. 날짜와 Look-ahead 안전
+## 18. Date and Look-ahead Safety
 
-Common은 Consumer가 전달한 날짜와 가격 시점을 신뢰하되,
-판단 계약에서 미래 데이터를 요구하면 안 된다.
+Common trusts the dates and price timing that the Consumer passes in,
+but the decision contract must not require future data.
 
-확인할 날짜는 아래와 같다.
+The dates to confirm are as follows.
 
 - Trade Date
 - Feature Date
@@ -622,90 +621,90 @@ Common은 Consumer가 전달한 날짜와 가격 시점을 신뢰하되,
 - Exit Date
 - Holding Days
 
-주의사항:
+Cautions:
 
-- 미래 Feature 참조 금지
-- 미래 가격 참조 금지
-- Backtest 당일 종가와 실제 체결 시점 구분
-- 날짜 문자열 단순 비교 주의
-- Naive·Timezone-aware Datetime 혼합 금지
-- Holding Days 포함·제외 기준 유지
+- Prohibit referencing future Features
+- Prohibit referencing future prices
+- Distinguish the Backtest same-day close from the actual fill timing
+- Beware simple string comparison of dates
+- Prohibit mixing Naive·Timezone-aware Datetime
+- Maintain the include·exclude criterion for Holding Days
 
-## 19. Package와 Import
+## 19. Package and Import
 
 ### 19.1 `__init__.py`
 
-`__init__.py`는 Package Metadata와 공개 Symbol을 Export할 수 있다.
+`__init__.py` may export Package Metadata and public Symbols.
 
-변경 시 아래를 확인한다.
+When changing it, confirm the following.
 
-- Consumer의 Package-level Import
+- Consumer Package-level Import
 - Export Symbol
-- Import 순서
+- Import order
 - Circular Import
 - Import Side Effect
 - Version Metadata
 
-모든 Symbol을 편의상 무분별하게 Export하지 않는다.
+Do not export all Symbols indiscriminately for convenience.
 
 ### 19.2 `common_utils.py`
 
-공통 순수 Helper를 제공하는 파일이다.
+This file provides common pure Helpers.
 
-- 전략 계약을 숨기는 과도한 Generic Helper를 만들지 않는다.
-- Input Mutation 여부를 확인한다.
-- 날짜·수치 Helper의 Boundary를 확인한다.
-- 다른 Module과 중복 구현을 만들지 않는다.
+- Do not create an excessive Generic Helper that hides the strategy contract.
+- Confirm whether there is Input Mutation.
+- Confirm the Boundary of date·numeric Helpers.
+- Do not create duplicate implementations with other Modules.
 
 ### 19.3 `utils.py`
 
-Legacy 가능성이 있는 Utility Module이다.
+This is a Utility Module with Legacy potential.
 
-실제 Import와 Consumer 참조를 확인하기 전 삭제하지 않는다.
+Do not delete it before confirming the actual Import and Consumer references.
 
-파일명만 보고 미사용이라고 단정하지 않는다.
+Do not conclude it is unused based on the filename alone.
 
 ## 20. Version Metadata
 
-`common_version.py`는 Strategy와 Engine Metadata를 제공한다.
+`common_version.py` provides Strategy and Engine Metadata.
 
-| 항목 | 확인 내용 |
+| Item | Confirmation content |
 |---|---|
-| Strategy Name | Consumer 저장·표시 |
-| Engine Version | 판단 엔진 식별 |
-| Config Version | Config Snapshot 연결 |
-| Component Version | 세부 Module 버전 여부 |
-| Format | 문자열 형식과 호환성 |
+| Strategy Name | Consumer storage·display |
+| Engine Version | Decision engine identification |
+| Config Version | Link with the Config Snapshot |
+| Component Version | Whether there is a detailed Module version |
+| Format | String format and compatibility |
 
-문서만 수정한 경우 Version을 올리지 않는다.
+Do not bump the Version when only documentation is modified.
 
-Threshold·Rule·Default가 바뀌어 결과가 달라지면
-Version 영향 여부를 함께 판단한다.
+When a Threshold·Rule·Default change alters results,
+also judge whether it affects the Version.
 
-## 21. Package, Build와 배포
+## 21. Package, Build, and Deployment
 
-### 21.1 Package 기준
+### 21.1 Package Basis
 
-| 항목 | 값 |
+| Item | Value |
 |---|---|
 | Package Name | `port-strategy-common` |
 | Import Package | `port_strategy_common` |
 | Package Version | `1.0.1` |
 | Strategy Version | `COMMON_STRATEGY_V1.0.0` |
-| Wheel 이름 | `port_strategy_common-1.0.1-py3-none-any.whl` |
+| Wheel name | `port_strategy_common-1.0.1-py3-none-any.whl` |
 | Registry | AWS CodeArtifact |
-| RC·정식 보존 | RC와 정식 Version을 별도 Version으로 동시 보존 |
-| 공개 계약 검증 | 설치된 Wheel 기준으로 실행 |
-| CodeBuild 기본 Publish | 프로젝트 기본값 `false` (안전장치) |
-| main Push | 자동 Release Publish 활성화 |
+| RC·release preservation | Preserve RC and release Versions simultaneously as separate Versions |
+| Public API validation | Run against the installed Wheel |
+| CodeBuild default Publish | Project default `false` (safeguard) |
+| main Push | Enable automatic Release Publish |
 | workflow_dispatch | Build-only |
 
-Package Version의 Canonical Source는 `pyproject.toml`이다.
-Wheel 이름과 Version 검증은 `pyproject.toml` Version을 기준으로 동적으로 수행한다.
+The Canonical Source of the Package Version is `pyproject.toml`.
+The Wheel name and Version validation are performed dynamically based on the `pyproject.toml` Version.
 
-실제 AWS Account, Repository Endpoint, Token과 ARN은 문서에 기록하지 않는다.
+Do not record the actual AWS Account, Repository Endpoint, Token, or ARN in documentation.
 
-### 21.2 CI/CD 흐름
+### 21.2 CI/CD Flow
 
 ```text
 main Push
@@ -713,73 +712,73 @@ main Push
     → AWS CodeBuild
     → Ruff · mypy
     → Wheel Build · Twine Check
-    → Wheel 구조 검증
-    → 설치된 Wheel 공개 계약 테스트
+    → Wheel structure validation
+    → Installed-Wheel Public API test
     → Build Gate
     → CodeArtifact Version Guard
     → CodeArtifact Publish
 
 workflow_dispatch
-    → 동일 품질 게이트
-    → Build-only (Publish 미활성)
+    → Same quality gates
+    → Build-only (Publish disabled)
 ```
 
-GitHub Actions는 OIDC로 인증하고 CodeBuild를 시작한다.
-장기 AWS Access Key를 GitHub Secret에 저장하는 방식은 사용하지 않는다.
-main Push는 CodeBuild 환경 Override로 Publish를 활성화하고 `workflow_dispatch`는 Build-only다.
-CodeBuild 프로젝트 자체 기본값 `false`는 안전장치로 유지한다.
-Build 품질 게이트 실패 시 Publish를 진행하지 않는다.
-Publish 전 동일 Version이 CodeArtifact에 존재하면 Publish를 차단한다.
+GitHub Actions authenticates with OIDC and starts CodeBuild.
+The approach of storing a long-lived AWS Access Key in a GitHub Secret is not used.
+main Push enables Publish via a CodeBuild environment Override, and `workflow_dispatch` is Build-only.
+The CodeBuild project's own default `false` is kept as a safeguard.
+If a Build quality gate fails, Publish does not proceed.
+If the same Version already exists in CodeArtifact, Publish is blocked before publishing.
 
-### 21.3 품질 게이트
+### 21.3 Quality Gates
 
-| 게이트 | 기준 |
+| Gate | Criterion |
 |---|---|
-| Ruff | 정적 검증 통과 |
-| mypy | `.devops/scripts` 범위 통과 |
-| Wheel Build | Wheel 산출 |
-| Twine Check | 배포 Metadata 검증 |
-| Wheel 구조 | 필수 Member와 금지 경로 검증 |
-| 공개 계약 테스트 | 설치된 Wheel 기준 4건 통과 |
-| Source SHA 일치 | 요청 SHA와 Resolved SHA 확인 |
-| Build Gate | `CODEBUILD_BUILD_SUCCEEDING` 실패 시 Publish 차단 |
-| Version Guard | 동일 Version 존재 시 Publish 차단 |
-| CodeBuild 기본 Publish | `false` 안전장치 유지 |
-| main Push Publish | Override로 활성화 |
+| Ruff | Static validation passes |
+| mypy | Passes for the `.devops/scripts` scope |
+| Wheel Build | Wheel is produced |
+| Twine Check | Distribution Metadata validation |
+| Wheel structure | Validate required Members and prohibited paths |
+| Public API test | 4 tests pass against the installed Wheel |
+| Source SHA match | Confirm the requested SHA and the Resolved SHA |
+| Build Gate | Block Publish if `CODEBUILD_BUILD_SUCCEEDING` fails |
+| Version Guard | Block Publish if the same Version exists |
+| CodeBuild default Publish | Keep the `false` safeguard |
+| main Push Publish | Enabled via Override |
 
-### 21.4 Consumer Contract 결과
+### 21.4 Consumer Contract Results
 
-| Consumer | 결과 |
+| Consumer | Result |
 |---|---|
-| StrategyResearch | 48/48 통과 |
-| StrategyDecision | 24/24 통과 |
-| StrategyExecution | N/A · 직접 Import 없음 |
+| StrategyResearch | 48/48 passed |
+| StrategyDecision | 24/24 passed |
+| StrategyExecution | N/A · No direct Import |
 
-pandas 관련 사실:
+pandas-related facts:
 
-- Legacy `utils.to_float`는 pandas를 사용한다.
-- Research는 자체 Runtime Dependency로 pandas를 제공한다.
-- Common Package Dependency 정책 변경은 이번 문서 작업 범위가 아니다.
+- Legacy `utils.to_float` uses pandas.
+- Research provides pandas as its own Runtime Dependency.
+- Changing the Common Package Dependency policy is out of scope for this documentation work.
 
-### 21.5 승격과 Rollback
+### 21.5 Promotion and Rollback
 
-아래 흐름은 초기 Release(`1.0.0rc1` → `1.0.0`) 검증 사례다.
-현재 Package Version은 `1.0.1`이며 승격·Rollback 방식은 동일하다.
+The flow below is the initial Release (`1.0.0rc1` → `1.0.0`) validation case.
+The current Package Version is `1.0.1`, and the promotion·Rollback method is the same.
 
 ```text
 1.0.0rc1 Publish
-    → 설치 검증
+    → Installation validation
     → Research·Decision Contract Test
     → 1.0.0 Publish
-    → 정식 버전 설치 검증
-    → 1.0.0rc1 Version Pin 재설치
-    → 공개 계약 재검증
+    → Release-version installation validation
+    → Reinstall pinned to 1.0.0rc1 Version
+    → Public API re-validation
 ```
 
-Rollback은 Package 삭제나 Git Reset이 아니라
-이전 Published Version을 명시적으로 재설치하는 방식이다.
+Rollback is not a Package deletion or a Git Reset;
+it is an explicit reinstall of the previously published Version.
 
-## 22. 주요 파일 구조
+## 22. Primary File Structure
 
 ```text
 .
@@ -817,28 +816,28 @@ Rollback은 Package 삭제나 Git Reset이 아니라
     └── source-file-catalog.md
 ```
 
-날짜별 `docs/worklog/*.md`는 현재 문서 구조에 포함하지 않는다.
-새 Worklog 파일을 만들지 않는다.
+Date-specific `docs/worklog/*.md` files are not included in the current documentation structure.
+Do not create new Worklog files.
 
-실제 파일 추가·삭제가 있으면 Source Catalog와 함께 갱신한다.
+When files are actually added or deleted, update the Source Catalog together.
 
-## 23. 파일 그룹
+## 23. File Groups
 
-### 22.1 계약
+### 22.1 Contracts
 
-| 파일 | 역할 |
+| File | Role |
 |---|---|
-| `common_context.py` | 입력 Context Dataclass |
-| `common_result.py` | 판단 Result Dataclass |
-| `common_types.py` | Enum과 상태 문자열 |
+| `common_context.py` | Input Context Dataclass |
+| `common_result.py` | Decision Result Dataclass |
+| `common_types.py` | Enum and status strings |
 | `common_version.py` | Version Metadata |
 | `__init__.py` | Package Export |
 
 ### 22.2 Market·BUY
 
-| 파일 | 역할 |
+| File | Role |
 |---|---|
-| `common_market.py` | Market 판단 |
+| `common_market.py` | Market Decision |
 | `common_buy_filter.py` | BUY Filter |
 | `common_buy_guard.py` | BUY Guard |
 | `common_buy_sizing.py` | BUY Sizing |
@@ -846,25 +845,25 @@ Rollback은 Package 삭제나 Git Reset이 아니라
 
 ### 22.3 SELL·Block
 
-| 파일 | 역할 |
+| File | Role |
 |---|---|
 | `common_sell_guard.py` | SELL Guard |
-| `common_sell_decision.py` | SELL·HOLD와 Backtest 호환 |
-| `common_block_watch.py` | Block·Watch 판단 |
+| `common_sell_decision.py` | SELL·HOLD and Backtest compatibility |
+| `common_block_watch.py` | Block·Watch decision |
 
 ### 22.4 Config·Utility
 
-| 파일 | 역할 |
+| File | Role |
 |---|---|
-| `config.py` | Strategy Config와 Snapshot |
-| `common_utils.py` | 공통 순수 Helper |
-| `utils.py` | Legacy 가능 Utility |
+| `config.py` | Strategy Config and Snapshot |
+| `common_utils.py` | Common pure Helper |
+| `utils.py` | Utility with Legacy potential |
 
-## 24. 사용 예시
+## 24. Usage Example
 
-아래 예시는 Common의 호출 형태를 설명하기 위한 Placeholder다.
+The example below is a Placeholder to illustrate Common's call form.
 
-실제 Constructor Field와 함수 Signature는 현재 소스에서 확인한다.
+Confirm the actual Constructor Fields and function Signatures in the current source.
 
 ```python
 from port_strategy_common.common_context import CommonMarketContext
@@ -881,29 +880,29 @@ market_context = CommonMarketContext(
 market_decision = common_decide_market(market_context)
 ```
 
-예제에 실제 계좌번호, Token, Password, Webhook, API Key와 ARN을 사용하지 않는다.
+Do not use an actual account number, Token, Password, Webhook, API Key, or ARN in examples.
 
-## 25. AWS 운영에서의 위치
+## 25. Position in AWS Operations
 
-Common은 AWS에서 독립 실행되는 MS가 아니다.
+Common is not an MS that runs standalone in AWS.
 
-| 항목 | Common 역할 |
+| Item | Common role |
 |---|---|
-| ECS RunTask | 직접 대상 아님 |
-| Lambda | 직접 Handler 아님 |
-| Step Functions | 직접 Step 아님 |
-| EventBridge | 직접 Schedule 대상 아님 |
-| AWS Batch | 직접 Job 아님 |
-| Container | Consumer Image에 Dependency로 포함 가능 |
+| ECS RunTask | Not a direct target |
+| Lambda | Not a direct Handler |
+| Step Functions | Not a direct Step |
+| EventBridge | Not a direct Schedule target |
+| AWS Batch | Not a direct Job |
+| Container | Can be included as a Dependency in a Consumer Image |
 
-실제 Cluster, Task Definition, Image URI, Subnet, Security Group,
-Secret ARN과 Command ID는 Consumer 문서에서 관리한다.
+The actual Cluster, Task Definition, Image URI, Subnet, Security Group,
+Secret ARN, and Command ID are managed in the Consumer documentation.
 
-## 26. 보안
+## 26. Security
 
-Common Source와 Config에는 Runtime Secret을 포함하지 않는다.
+Do not include Runtime Secrets in the Common Source and Config.
 
-문서와 예제에 기록하지 않는 값:
+Values not recorded in documentation and examples:
 
 - Password
 - Token
@@ -914,15 +913,15 @@ Common Source와 Config에는 Runtime Secret을 포함하지 않는다.
 - IAM Role ARN
 - Task Definition ARN
 - Image URI
-- 일회성 Command ID
+- One-time Command ID
 
-필요한 경우 `[REDACTED]` 또는 일반 Placeholder를 사용한다.
+Use `[REDACTED]` or a generic Placeholder when needed.
 
-Config Snapshot과 Detail Payload에도 Secret이 포함되지 않도록 한다.
+Ensure that no Secret is included in the Config Snapshot or the Detail Payload.
 
-## 27. 안전한 검증
+## 27. Safe Validation
 
-문서 작업에서는 아래 정적 확인만 수행한다.
+For documentation work, perform only the following static checks.
 
 ```powershell
 git status --short
@@ -930,100 +929,100 @@ git diff --stat
 git diff -- README.md
 ```
 
-코드 변경 시에는 Repository에 실제로 존재하는 테스트 구조를 먼저 확인한다.
+For code changes, first confirm the test structure that actually exists in the Repository.
 
-검증 후보:
+Validation candidates:
 
-- Context 생성
+- Context construction
 - Result Default
 - Enum Value
 - Config Copy·Override
 - Market Threshold Boundary
 - BUY Filter·Guard·Sizing Boundary
 - BUY Decision Orchestration
-- SELL Decision과 Backtest 호환
-- 반복 호출 결정론
+- SELL Decision and Backtest compatibility
+- Determinism across repeated calls
 - Consumer Import·Signature
 
-다음 검증은 Common 작업에서 수행하지 않는다.
+The following validations are not performed in Common work.
 
-- DB 연결
-- 외부 API
-- 크롤링
-- 주문
-- AWS 실행
-- Consumer Batch·Backtest·Daily 운영 실행
-- File Write Side Effect가 있는 Entrypoint
+- DB connection
+- External API
+- Crawling
+- Orders
+- AWS execution
+- Consumer Batch·Backtest·Daily operational execution
+- Entrypoints with a File Write Side Effect
 
-## 28. 변경 영향 분류
+## 28. Change Impact Classification
 
-| 변경 | 영향 |
+| Change | Impact |
 |---|---|
-| 문서 정리 | 기능 결과 없음 |
-| 내부 리팩터링 | 공개 계약·결과 불변 |
-| Optional 확장 | Consumer 하위 호환 확인 |
-| Threshold·Rule 변경 | 전략 결과 변경 |
-| Function·Field·Enum 변경 | Breaking Change 가능 |
-| Config Key 변경 | 모든 Consumer 영향 |
-| Reason 변경 | 저장·집계·표시 영향 |
-| Export 변경 | Import 실패 가능 |
-| Version 변경 | 저장·Report 식별 영향 |
+| Documentation cleanup | No functional result |
+| Internal refactoring | Public API·result unchanged |
+| Optional extension | Confirm Consumer backward compatibility |
+| Threshold·Rule change | Strategy result change |
+| Function·Field·Enum change | Possible Breaking Change |
+| Config Key change | Affects all Consumers |
+| Reason change | Affects storage·aggregation·display |
+| Export change | Possible Import failure |
+| Version change | Affects storage·Report identification |
 
-전략 결과가 달라지는 변경은 단순 리팩터링으로 보고하지 않는다.
+Do not report a change that alters strategy results as a simple refactoring.
 
-## 29. 현재 확인이 필요한 항목
+## 29. Items Requiring Confirmation
 
-아래 항목은 실제 소스와 Consumer Import를 정적으로 대조해 확정한다.
+Confirm the items below by statically cross-checking the actual source and Consumer Imports.
 
-| 항목 | 확인 대상 |
+| Item | Confirmation target |
 |---|---|
-| Public API | 실제 공개 함수와 Signature |
-| Context | 실제 Dataclass Field·Default |
-| Result | 실제 Field·Detail 구조 |
-| Enum | 실제 Member·Value |
-| Reason | 실제 문자열과 Consumer 비교 |
-| Config | Key·Default·Nested 구조 |
+| Public API | Actual public functions and Signatures |
+| Context | Actual Dataclass Field·Default |
+| Result | Actual Field·Detail structure |
+| Enum | Actual Member·Value |
+| Reason | Actual strings and Consumer comparison |
+| Config | Key·Default·Nested structure |
 | Snapshot | Copy·Mutation·Override |
-| BUY 순서 | Filter·Guard·Sizing Orchestration |
-| SELL 호환 | `common_evaluate_backtest_sell` 실제 계약 |
-| Block Watch | Block·Watch 의미와 Consumer 사용 |
+| BUY order | Filter·Guard·Sizing Orchestration |
+| SELL compatibility | Actual `common_evaluate_backtest_sell` contract |
+| Block Watch | Block·Watch meaning and Consumer use |
 | Determinism | Clock·Random·Global Mutation |
 | Numeric | Float·Decimal·Boundary |
-| Date | Look-ahead와 Holding Days |
-| Export | `__init__.py` 공개 Symbol |
+| Date | Look-ahead and Holding Days |
+| Export | `__init__.py` public Symbol |
 
-2026-08-12 기준 아래 항목은 확정되어 미확정 목록에서 제외한다.
+As of 2026-08-12, the items below are confirmed and removed from the unconfirmed list.
 
-| 항목 | 값 |
+| Item | Value |
 |---|---|
-| Research 직접 Import | 확인 · Contract 48/48 |
-| Decision 직접 Import | 확인 · Contract 24/24 |
-| Execution 직접 Import | 없음 · 직접 Consumer 아님 |
-| Legacy `utils.py` | Research가 `to_float` 직접 Import |
-| 공개 계약 테스트 | 설치된 Wheel 기준 4건 존재 |
+| Research direct Import | Confirmed · Contract 48/48 |
+| Decision direct Import | Confirmed · Contract 24/24 |
+| Execution direct Import | None · Not a direct Consumer |
+| Legacy `utils.py` | Research imports `to_float` directly |
+| Public API test | 4 tests exist against the installed Wheel |
 | Package Version | `1.0.1` |
-| Wheel 구조 | 필수 Member·금지 경로 검증 존재 |
-| CI·Publish 방식 | GitHub Actions → CodeBuild, main Push 자동 Publish |
+| Wheel structure | Required Member·prohibited path validation exists |
+| CI·Publish method | GitHub Actions → CodeBuild, automatic Publish on main Push |
 
-실제 소스 확인 없이 Public API 전체 Signature나 Reason 전체 목록까지 확정하지 않는다.
-확인되지 않은 항목을 운영 사실로 단정하지 않는다.
+Do not finalize the entire Public API Signature set or the full Reason list without confirming the actual source.
+Do not treat unconfirmed items as operational fact.
 
-## 30. 문서 체계
+## 30. Documentation System
 
-| 문서 | 역할 |
+| Document | Role |
 |---|---|
-| `AGENTS.md` | 작업·호환성·순수성·검증 규칙 |
-| `README.md` | 현재 구조와 사용 AS-IS |
-| `CHANGELOG.md` | 날짜별 실제 변경 이력 |
-| `docs/source-file-catalog.md` | 파일 책임·Consumer·변경 영향 |
+| `AGENTS.md` | Work·compatibility·purity·validation rules |
+| `README.md` | Current structure and usage AS-IS |
+| `CHANGELOG.md` | Actual change history by date |
+| `docs/source-file-catalog.md` | File responsibility·Consumer·change impact |
 
-- README에는 현재 상태를 기록한다.
-- CHANGELOG에는 과거 변경 사실을 기록한다.
-- Source Catalog에는 파일별 책임과 영향 범위를 기록한다.
-- 날짜별 Worklog는 새로 만들지 않는다.
-- 같은 내용을 여러 문서에 장문으로 반복하지 않는다.
+- Record the current state in the README.
+- Record past change facts in the CHANGELOG.
+- Record per-file responsibilities and impact scope in the Source Catalog.
+- Do not create new date-specific Worklogs.
+- Do not repeat the same content at length across multiple documents.
 
-## 31. 관련 문서
+## 31. Related Documents
 
 - [AGENTS.md](AGENTS.md)
 - [CHANGELOG.md](CHANGELOG.md)

@@ -1,7 +1,7 @@
-"""최종 매도 판단과 backtest 호환 sell 평가 모듈.
+"""Module for the final sell decision and backtest-compatible sell evaluation.
 
-SELL guard 결과를 우선순위에 따라 SELL/HOLD로 변환하고, 기존 backtest evaluate_sell 호환 helper를 제공한다.
-reason 문자열과 반환 dict key는 consumer 호환성에 직접 영향을 주므로 변경에 주의해야 한다.
+Converts SELL guard results into SELL/HOLD by priority, and provides a helper compatible with the existing backtest evaluate_sell.
+The reason strings and returned dict keys directly affect consumer compatibility, so change them with care.
 """
 
 from __future__ import annotations
@@ -18,16 +18,16 @@ def common_decide_sell(
     config: dict | None = None,
 ) -> CommonSellDecision:
     """
-    SELL 최종 공통 판단 함수.
+    Common final SELL decision function.
 
-    단계:
-    1. SELL guard/risk flag 계산
-    2. 우선순위 기반 SELL/HOLD 결정
+    Stages:
+    1. Compute SELL guard/risk flags
+    2. Priority-based SELL/HOLD decision
 
-    주의:
-    - DB 접근 없음
-    - 주문 실행 없음
-    - Backtest / Daily가 같은 입력을 주면 같은 결과를 반환해야 함
+    Note:
+    - No DB access
+    - No order execution
+    - Must return the same result when Backtest / Daily provide the same input
     """
 
     guard = common_decide_sell_guard(
@@ -39,7 +39,7 @@ def common_decide_sell(
     flags = guard.detail.get("sell_flags", {})
     active_reasons = guard.detail.get("active_reasons", [])
 
-    # 1. 강제 손절 계열은 최소 보유일보다 우선
+    # 1. The forced stop-loss family takes priority over the minimum holding days
     if flags.get("hard_stop"):
         return _common_build_sell_decision(
             position=position,
@@ -58,7 +58,7 @@ def common_decide_sell(
             priority=2,
         )
 
-    # 2. 이익 보호
+    # 2. Profit protection
     if flags.get("profit_protect"):
         return _common_build_sell_decision(
             position=position,
@@ -68,7 +68,7 @@ def common_decide_sell(
             priority=3,
         )
 
-    # 3. 초기 리스크 컷
+    # 3. Early risk cut
     if flags.get("early_risk_cut"):
         return _common_build_sell_decision(
             position=position,
@@ -87,7 +87,7 @@ def common_decide_sell(
             priority=5,
         )
 
-    # 4. 최소 보유일 보호
+    # 4. Minimum holding-day protection
     if flags.get("min_holding_days"):
         return _common_build_hold_decision(
             position=position,
@@ -97,7 +97,7 @@ def common_decide_sell(
             priority=10,
         )
 
-    # 5. MARKET BLOCK 유지 허용
+    # 5. MARKET BLOCK keep allowed
     if flags.get("market_block") and flags.get("market_block_keep_allowed"):
         return _common_build_hold_decision(
             position=position,
@@ -107,7 +107,7 @@ def common_decide_sell(
             priority=20,
         )
 
-    # 6. MARKET BLOCK 위험 계열
+    # 6. MARKET BLOCK risk family
     if flags.get("market_block_quality_drop"):
         return _common_build_sell_decision(
             position=position,
@@ -144,7 +144,7 @@ def common_decide_sell(
             priority=33,
         )
 
-    # 7. 일반 약세 계열
+    # 7. General weakness family
     if flags.get("stale_loser"):
         return _common_build_sell_decision(
             position=position,
@@ -172,7 +172,7 @@ def common_decide_sell(
             priority=42,
         )
 
-    # 8. 최대 보유일
+    # 8. Maximum holding days
     if flags.get("max_holding_days"):
         return _common_build_sell_decision(
             position=position,
@@ -182,7 +182,7 @@ def common_decide_sell(
             priority=50,
         )
 
-    # 9. 기본 HOLD
+    # 9. Default HOLD
     return _common_build_hold_decision(
         position=position,
         market=market,
@@ -247,7 +247,7 @@ def _common_build_hold_decision(
     )
 
 # =========================================================
-# Backtest 기존 evaluate_sell()과 1:1 동일한 함수
+# Function that is 1:1 identical to the existing backtest evaluate_sell()
 # =========================================================
 
 from port_strategy_common.config import SELL_CONFIG
@@ -266,14 +266,14 @@ def common_evaluate_backtest_sell(
     config: dict | None = None,
 ) -> dict:
     """
-    기존 port_strategy_research.backtest_sell_logic.evaluate_sell()과
-    1:1 동일한 결과를 반환하기 위한 Backtest 전용 SELL 판단 함수.
+    Backtest-only SELL decision function that returns a result 1:1 identical to
+    the existing port_strategy_research.backtest_sell_logic.evaluate_sell().
 
-    주의:
-    - 기존 sell_reason 문자열 유지
-    - 기존 반환 dict key 유지
-    - 기존 비교 연산자(<, <=, ==) 유지
-    - 기존 BLOCK 세부 flag 유지
+    Note:
+    - Keeps the existing sell_reason strings
+    - Keeps the existing returned dict keys
+    - Keeps the existing comparison operators (<, <=, ==)
+    - Keeps the existing BLOCK detailed flags
     """
 
     cfg = config or _BACKTEST_SELL_CFG

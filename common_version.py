@@ -1,7 +1,7 @@
 """
 Common Strategy Version
 
-research / decision / execution이 동일한 전략 코어를 사용하는지 추적하기 위한 버전 정보.
+Version information for tracking whether research / decision / execution use the same strategy core.
 """
 
 COMMON_STRATEGY_NAME = "PORT_COMMON_STRATEGY_CORE"

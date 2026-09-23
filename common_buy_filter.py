@@ -1,7 +1,7 @@
-"""매수 후보 기본 필터 공통 모듈.
+"""Common module for the base buy candidate filter.
 
-종목 점수, 수급, 변동성, 장중 범위 등을 기준으로 BUY 후보 통과 여부를 판단한다.
-backtest row를 공통 stock context로 변환하는 helper도 함께 제공하며 외부 연동은 수행하지 않는다.
+Determines whether a BUY candidate passes based on the stock score, flow, volatility, intraday range, and similar criteria.
+It also provides a helper that converts a backtest row into a common stock context, and it performs no external integration.
 """
 
 from __future__ import annotations
@@ -20,13 +20,13 @@ def common_decide_buy_filter(
     config: dict | None = None,
 ) -> CommonFilterDecision:
     """
-    BUY 후보 기본 필터 공통 함수.
+    Common function for the base BUY candidate filter.
 
-    기존 backtest_filter.py 조건과 동일한 방향:
-    - no_signal_flag 제외
-    - short / volatility / intraday 상한 제외
-    - flow / final 최소 기준 제외
-    - tape/info는 flow_strong 이상이면 예외 통과
+    Same direction as the existing backtest_filter.py conditions:
+    - Exclude on no_signal_flag
+    - Exclude on the short / volatility / intraday upper limits
+    - Exclude on the flow / final minimum criteria
+    - tape/info pass as an exception when flow is at or above flow_strong
     """
 
     final_score = Decimal(str(stock.final_score))
@@ -172,14 +172,14 @@ def common_filter_buy_candidates(
     config: dict | None = None,
 ) -> list[dict[str, Any]]:
     """
-    기존 backtest_filter.filter_buy_candidates()와 동일한 리스트 필터 함수.
+    List filter function identical to the existing backtest_filter.filter_buy_candidates().
 
-    역할:
-    1. row list 필터링
-    2. strong / normal 분리
-    3. extreme_score_flag / info_bonus_flag 추가
-    4. 기존 sort_key 기준 정렬
-    5. decision.max_positions 만큼 cut
+    Role:
+    1. Filter the row list
+    2. Split into strong / normal
+    3. Add extreme_score_flag / info_bonus_flag
+    4. Sort by the existing sort_key
+    5. Cut to decision.max_positions
     """
 
     strong: list[dict[str, Any]] = []
@@ -230,12 +230,12 @@ def common_filter_buy_candidates(
 
 def common_build_stock_context_from_row(row: dict[str, Any]) -> CommonStockContext:
     """
-    backtest stock row -> CommonStockContext 변환.
+    Convert a backtest stock row -> CommonStockContext.
 
-    기존 backtest_filter.py 필드명 기준:
+    Based on the existing backtest_filter.py field names:
     - flow_score -> flow_pressure_score
     - volatility_20d -> volatility_score
-    - info_score / has_info_flag / no_signal_flag는 raw에 유지
+    - info_score / has_info_flag / no_signal_flag are kept in raw
     """
 
     return CommonStockContext(
@@ -263,14 +263,14 @@ def common_build_stock_context_from_row(row: dict[str, Any]) -> CommonStockConte
 
 def common_buy_candidate_sort_key(row: dict[str, Any]):
     """
-    기존 backtest_filter.py sort_key와 동일.
+    Same as the existing backtest_filter.py sort_key.
 
-    reverse=True와 함께 사용:
-    - final_score 높은 순
-    - flow_score 높은 순
-    - tape_score 높은 순
-    - info_score 높은 순
-    - short_pressure_score 낮은 순
+    Used with reverse=True:
+    - highest final_score first
+    - highest flow_score first
+    - highest tape_score first
+    - highest info_score first
+    - lowest short_pressure_score first
     """
     return (
         _d(row.get("final_score")),

@@ -1,7 +1,7 @@
-"""시장 regime 판단 공통 모듈.
+"""Common module for market regime decisions.
 
-market context와 config를 받아 시장 신호, exposure, 최대 보유 수, 최소 점수 기준을 계산한다.
-공통 전략 모듈 원칙에 따라 DB 접근, 외부 API 호출, 파일 IO를 수행하지 않는다.
+Takes a market context and config to compute the market signal, exposure, maximum position count, and minimum score criteria.
+Following the common strategy module principle, it does not perform DB access, external API calls, or file IO.
 """
 
 from __future__ import annotations
@@ -20,15 +20,15 @@ def common_decide_market(
     config: dict | None = None,
 ) -> CommonMarketDecision:
     """
-    Backtest / Daily 공통 시장 판단 함수.
+    Common market decision function for Backtest / Daily.
 
-    기존 backtest_market.evaluate_market() 로직과 동일한 흐름:
-    1. market_regime_score 기준 기본 signal 결정
-    2. breadth 약세 기준 downgrade
-    3. flow 약세 기준 downgrade
-    4. macro 약세 기준 downgrade
-    5. signal별 exposure / max_positions / min_score / min_flow 결정
-    6. AGGRESSIVE + strong_breadth_confirm 조건이면 exposure override
+    Same flow as the existing backtest_market.evaluate_market() logic:
+    1. Determine the base signal from market_regime_score
+    2. Downgrade based on weak breadth
+    3. Downgrade based on weak flow
+    4. Downgrade based on weak macro
+    5. Determine exposure / max_positions / min_score / min_flow per signal
+    6. Override exposure when the AGGRESSIVE + strong_breadth_confirm condition holds
     """
     market_score = context.market_regime_score
     breadth = context.breadth_pressure_score
