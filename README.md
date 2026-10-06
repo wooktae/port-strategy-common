@@ -823,7 +823,7 @@ When files are actually added or deleted, update the Source Catalog together.
 
 ## 23. File Groups
 
-### 22.1 Contracts
+### 23.1 Contracts
 
 | File | Role |
 |---|---|
@@ -833,7 +833,7 @@ When files are actually added or deleted, update the Source Catalog together.
 | `common_version.py` | Version Metadata |
 | `__init__.py` | Package Export |
 
-### 22.2 Market·BUY
+### 23.2 Market·BUY
 
 | File | Role |
 |---|---|
@@ -843,7 +843,7 @@ When files are actually added or deleted, update the Source Catalog together.
 | `common_buy_sizing.py` | BUY Sizing |
 | `common_buy_decision.py` | BUY Orchestration |
 
-### 22.3 SELL·Block
+### 23.3 SELL·Block
 
 | File | Role |
 |---|---|
@@ -851,7 +851,7 @@ When files are actually added or deleted, update the Source Catalog together.
 | `common_sell_decision.py` | SELL·HOLD and Backtest compatibility |
 | `common_block_watch.py` | Block·Watch decision |
 
-### 22.4 Config·Utility
+### 23.4 Config·Utility
 
 | File | Role |
 |---|---|
