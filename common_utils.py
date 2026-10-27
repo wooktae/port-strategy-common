@@ -1,7 +1,7 @@
-"""공통 전략 모듈에서 사용하는 안전 변환 utility.
+"""Safe-conversion utilities used by the shared strategy modules.
 
-None, NaN, Decimal, 문자열 입력을 안전하게 float/int/str/bool 값으로 변환한다.
-전략 판단 모듈의 반복 방어 로직을 줄이기 위한 순수 helper만 포함한다.
+Safely convert None, NaN, Decimal, and string inputs into float/int/str/bool values.
+Contains only pure helpers that reduce repetitive defensive logic in the strategy decision modules.
 """
 
 from __future__ import annotations
@@ -95,7 +95,7 @@ def common_get_config_bool(config: dict | None, key: str, default: bool = False)
 
 def common_to_float(value: Any, default: float = 0.0) -> float:
     """
-    기존 utils.to_float() 호환용 함수.
-    신규 common_* 모듈에서는 common_safe_float() 사용 권장.
+    Compatibility function for the existing utils.to_float().
+    In new common_* modules, prefer using common_safe_float().
     """
     return common_safe_float(value, default)

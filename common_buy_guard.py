@@ -1,7 +1,7 @@
-"""매수 측 risk guard 공통 모듈.
+"""Common module for buy-side risk guards.
 
-과열 추격, 매수일 손절 위험, 중간 수급/좁은 range 위험 등 BUY sizing에 필요한 flag를 계산한다.
-이 모듈은 주문 실행이나 DB 저장 없이 입력 context와 config만 사용한다.
+Computes the flags needed for BUY sizing, such as overheated chasing, buy-day stop-loss risk, and mid-flow/tight-range risk.
+This module uses only the input context and config, without order execution or DB storage.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ def common_is_hot_chase(
     config: dict | None = None,
 ) -> bool:
     """
-    기존 backtest_buy_logic.py의 hot_chase 조건과 동일.
+    Same as the hot_chase condition in the existing backtest_buy_logic.py.
 
     hot_chase =
         AGGRESSIVE
@@ -47,7 +47,7 @@ def common_is_buy_day_stop_risk(
     config: dict | None = None,
 ) -> bool:
     """
-    기존 backtest_buy_logic.py의 buy_day_stop_risk 조건과 동일.
+    Same as the buy_day_stop_risk condition in the existing backtest_buy_logic.py.
 
     buy_day_stop_risk =
         flow >= 0.85
@@ -77,7 +77,7 @@ def common_is_mid_flow_tight_range_risk(
     config: dict | None = None,
 ) -> bool:
     """
-    기존 backtest_buy_logic.py의 mid_flow_tight_range_risk 조건과 동일.
+    Same as the mid_flow_tight_range_risk condition in the existing backtest_buy_logic.py.
 
     mid_flow_tight_range_risk =
         not hot_chase
@@ -111,7 +111,7 @@ def common_is_flow_0_9_plus_soft(
     config: dict | None = None,
 ) -> bool:
     """
-    기존 backtest_buy_logic.py의 flow_0_9_plus_soft 조건과 동일.
+    Same as the flow_0_9_plus_soft condition in the existing backtest_buy_logic.py.
 
     flow_0_9_plus_soft =
         AGGRESSIVE
@@ -132,16 +132,16 @@ def common_is_high_flow_high_score_soft(
     config: dict | None = None,
 ) -> bool:
     """
-    고수급/고점수 과열 구간 미세 sizing haircut 실험용 flag.
+    Experimental flag for a fine sizing haircut in the high-flow/high-score overheated zone.
 
-    조건:
+    Condition:
         flow_score >= 0.90
         and final_score >= 0.60
 
-    주의:
-    - BUY 차단용이 아님.
-    - 기존 hot_chase / buy_day_stop_risk / flow_0_9_plus_soft를 대체하지 않음.
-    - sizing 단계에서 기존 haircut 이후 추가 미세 multiplier로만 사용.
+    Note:
+    - Not for blocking BUY.
+    - Does not replace the existing hot_chase / buy_day_stop_risk / flow_0_9_plus_soft.
+    - Used only as an additional fine multiplier after the existing haircut in the sizing stage.
     """
 
     enabled = bool(common_get_config_float(config, "high_flow_high_score_soft_enabled", 1.0))
@@ -163,17 +163,17 @@ def common_decide_buy_guard(
     config: dict | None = None,
 ) -> CommonGuardDecision:
     """
-    BUY 후보 toxic flag 공통 판단.
+    Common evaluation of BUY candidate toxic flags.
 
-    기존 backtest_buy_logic.py에서 buy_info에 저장하던 flag와 이름을 맞춤:
+    Names are aligned with the flags previously stored in buy_info in the existing backtest_buy_logic.py:
     - is_hot_chase
     - is_buy_day_stop_risk
     - is_mid_flow_tight_range_risk
     - is_flow_0_9_plus_soft
 
-    주의:
-    - 여기서는 BUY 차단 여부를 확정하지 않음.
-    - size haircut 적용은 common_buy_sizing.py helper에서 처리 예정.
+    Note:
+    - This does not finalize whether BUY is blocked.
+    - Size haircut application is handled by the common_buy_sizing.py helper.
     """
 
     hot_chase = common_is_hot_chase(
@@ -213,7 +213,7 @@ def common_decide_buy_guard(
         "flow_0_9_plus_soft": flow_0_9_plus_soft,
         "high_flow_high_score_soft": high_flow_high_score_soft,
 
-        # 기존 buy_info 저장명과 동일하게 추가 제공
+        # Also provided under the same names used in the existing buy_info storage
         "is_hot_chase": hot_chase,
         "is_buy_day_stop_risk": buy_day_stop_risk,
         "is_mid_flow_tight_range_risk": mid_flow_tight_range_risk,

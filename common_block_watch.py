@@ -1,7 +1,7 @@
-"""MARKET BLOCK 구간 관찰 후보 판단 모듈.
+"""Module for selecting watch candidates in the MARKET BLOCK regime.
 
-BLOCK 장세에서 실제 매수 신호가 아닌 watch 후보만 선별한다.
-주문, 성과 계산, DB 저장과 분리된 순수 판단 helper로 사용한다.
+In a BLOCK market, it selects only watch candidates rather than actual buy signals.
+Used as a pure decision helper separated from orders, performance calculation, and DB storage.
 """
 
 from __future__ import annotations
@@ -55,12 +55,12 @@ def evaluate_block_watch_candidate(
     max_intraday_range: Decimal = Decimal("0.12"),
 ) -> CommonBlockWatchDecision:
     """
-    BLOCK 구간에서 실제 매수는 하지 않지만, 강한 예외 후보를 관찰 대상으로 선별한다.
+    In the BLOCK regime, no actual buying is done, but strong exception candidates are selected for observation.
 
-    중요:
-    - 이 함수는 주문/매수 신호를 만들지 않는다.
-    - strategy_daily_signal / strategy_execution_order 와 분리해서 사용한다.
-    - Sharpe, MDD, 누적수익률 계산에는 포함하지 않는다.
+    Important:
+    - This function does not create order/buy signals.
+    - Used separately from strategy_daily_signal / strategy_execution_order.
+    - Not included in Sharpe, MDD, or cumulative-return calculations.
     """
 
     normalized_market_signal = (market_signal or "").upper()

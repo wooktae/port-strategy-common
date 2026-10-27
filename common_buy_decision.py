@@ -1,7 +1,7 @@
-"""최종 매수 판단 orchestration 모듈.
+"""Orchestration module for the final buy decision.
 
-BUY filter, BUY guard, BUY sizing을 순서대로 호출해 최종 BUY/SKIP 결과를 만든다.
-동일 입력에 대해 backtest와 daily가 같은 결과를 얻도록 순수 함수 흐름을 유지한다.
+Calls BUY filter, BUY guard, and BUY sizing in order to produce the final BUY/SKIP result.
+Keeps a pure-function flow so that backtest and daily obtain the same result for the same input.
 """
 
 from __future__ import annotations
@@ -25,18 +25,18 @@ def common_decide_buy(
     current_position_count: int = 0,
 ) -> CommonBuyDecision:
     """
-    BUY 최종 공통 판단 함수.
+    Common final BUY decision function.
 
-    단계:
-    1. BUY 기본 필터
+    Stages:
+    1. BUY base filter
     2. BUY guard/risk flag
     3. BUY sizing
-    4. 최종 BUY/SKIP 결정
+    4. Final BUY/SKIP decision
 
-    주의:
-    - DB 접근 없음
-    - 주문 실행 없음
-    - Backtest / Daily가 같은 입력을 주면 같은 결과를 반환해야 함
+    Note:
+    - No DB access
+    - No order execution
+    - Must return the same result when Backtest / Daily provide the same input
     """
 
     filter_decision = common_decide_buy_filter(

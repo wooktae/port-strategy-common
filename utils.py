@@ -1,7 +1,7 @@
-"""legacy utility 모듈.
+"""Legacy utility module.
 
-기존 consumer 호환을 위해 `to_float` helper를 유지한다.
-신규 common_* 모듈에서는 `common_utils.common_safe_float` 사용을 우선한다.
+Retains the `to_float` helper for compatibility with existing consumers.
+In new common_* modules, prefer using `common_utils.common_safe_float`.
 """
 
 from decimal import Decimal

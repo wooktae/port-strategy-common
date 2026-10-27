@@ -1,7 +1,7 @@
-"""매도 측 guard와 risk flag 공통 모듈.
+"""Common module for sell-side guards and risk flags.
 
-보유일, 손절, 이익 보호, MARKET BLOCK 세부 조건, 수급/점수 붕괴 여부를 계산한다.
-최종 SELL/HOLD 결정은 별도 모듈에서 우선순위에 따라 처리하며 이 모듈은 외부 연동을 수행하지 않는다.
+Computes holding days, stop-loss, profit protection, MARKET BLOCK detailed conditions, and flow/score breakdown.
+The final SELL/HOLD decision is handled by priority in a separate module, and this module performs no external integration.
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ def common_is_min_holding_days(
     config: dict | None = None,
 ) -> bool:
     """
-    최소 보유일 보호 여부.
+    Whether the minimum holding-day protection applies.
     """
     min_holding_days_no_sell = common_get_config_int(
         config,
@@ -38,11 +38,11 @@ def common_is_hard_stop(
     config: dict | None = None,
 ) -> bool:
     """
-    강제 손절 조건.
+    Forced stop-loss condition.
 
-    기준:
+    Criteria:
     - cum_return <= hard_stop_daily_return
-    - 또는 raw today_return 계열 값이 hard stop 이하
+    - or a raw today_return-family value is at or below the hard stop
     """
     hard_stop = common_get_config_float(
         config,
@@ -65,7 +65,7 @@ def common_is_existing_position_intraday_stop(
     config: dict | None = None,
 ) -> bool:
     """
-    기존 보유 포지션의 당일 급락 손절 조건.
+    Same-day sharp-drop stop-loss condition for an existing held position.
     """
     intraday_stop = common_get_config_float(
         config,
@@ -83,7 +83,7 @@ def common_is_profit_protect(
     config: dict | None = None,
 ) -> bool:
     """
-    누적 수익이 충분한 상태에서 당일 하락이 크면 이익 보호.
+    Protect profit when cumulative return is sufficient and the same-day drop is large.
     """
     profit_protect_cum_return = common_get_config_float(
         config,
@@ -109,7 +109,7 @@ def common_is_early_risk_cut(
     config: dict | None = None,
 ) -> bool:
     """
-    초기 보유일 구간의 급락 위험 컷.
+    Sharp-drop risk cut during the early holding-day window.
     """
     max_holding_days = common_get_config_int(
         config,
@@ -135,7 +135,7 @@ def common_is_early_cut(
     config: dict | None = None,
 ) -> bool:
     """
-    초기 보유 구간에서 누적 손실이 큰 경우 컷.
+    Cut when the cumulative loss is large during the early holding window.
     """
     early_cut_holding_days = common_get_config_int(
         config,
@@ -159,7 +159,7 @@ def common_is_max_holding_days(
     config: dict | None = None,
 ) -> bool:
     """
-    최대 보유일 도달 여부.
+    Whether the maximum holding day has been reached.
     """
     max_holding_days = common_get_config_int(
         config,
@@ -181,9 +181,9 @@ def common_is_market_block_keep_allowed(
     config: dict | None = None,
 ) -> bool:
     """
-    BLOCK 구간에서도 유지 가능한 최소 조건.
+    Minimum condition under which a position can still be kept in the BLOCK regime.
 
-    기존 전략에서 required_keep_profit / strong survivor 계열 판단의 skeleton.
+    Skeleton of the required_keep_profit / strong survivor family of decisions from the existing strategy.
     """
     min_keep_profit = common_get_config_float(
         config,
@@ -226,9 +226,9 @@ def common_is_market_block_quality_drop(
     config: dict | None = None,
 ) -> bool:
     """
-    BLOCK 구간 quality drop 판단.
+    Quality-drop decision in the BLOCK regime.
 
-    latest_stock이 없으면 판단 불가.
+    Cannot be decided when latest_stock is absent.
     """
     stock = position.latest_stock
     if stock is None:
@@ -256,7 +256,7 @@ def common_is_market_block_both_weak(
     config: dict | None = None,
 ) -> bool:
     """
-    BLOCK 구간 수급/점수 동시 약세.
+    Simultaneous flow/score weakness in the BLOCK regime.
     """
     stock = position.latest_stock
     if stock is None:
@@ -290,7 +290,7 @@ def common_is_market_block_flow_only_weak(
     config: dict | None = None,
 ) -> bool:
     """
-    BLOCK 구간 수급만 약한 경우.
+    Case where only the flow is weak in the BLOCK regime.
     """
     stock = position.latest_stock
     if stock is None:
@@ -324,7 +324,7 @@ def common_is_market_block_mid_hold_neither_clear(
     config: dict | None = None,
 ) -> bool:
     """
-    BLOCK 중기 혼합/불명확형.
+    BLOCK mid-term mixed/unclear type.
     """
     stock = position.latest_stock
     if stock is None:
@@ -363,7 +363,7 @@ def common_is_stale_loser(
     config: dict | None = None,
 ) -> bool:
     """
-    오래 들고 있는데 손실/수급 약한 stale loser.
+    Stale loser: held for a long time yet weak in loss/flow.
     """
     stock = position.latest_stock
     if stock is None:
@@ -397,7 +397,7 @@ def common_is_flow_breakdown(
     config: dict | None = None,
 ) -> bool:
     """
-    수급 붕괴 조건.
+    Flow breakdown condition.
     """
     stock = position.latest_stock
     if stock is None:
@@ -431,7 +431,7 @@ def common_is_score_breakdown(
     config: dict | None = None,
 ) -> bool:
     """
-    점수 붕괴 조건.
+    Score breakdown condition.
     """
     stock = position.latest_stock
     if stock is None:
@@ -466,12 +466,12 @@ def common_decide_sell_guard(
     config: dict | None = None,
 ) -> CommonGuardDecision:
     """
-    SELL 관련 guard/risk flag 공통 판단.
+    Common evaluation of SELL-related guard/risk flags.
 
-    주의:
-    - 여기서는 최종 SELL/HOLD를 확정하지 않음.
-    - 어떤 sell flag가 켜졌는지 detail에 기록.
-    - common_sell_decision.py에서 우선순위에 따라 최종 SELL/HOLD 결정.
+    Note:
+    - This does not finalize the SELL/HOLD decision.
+    - Records which sell flags are set in detail.
+    - The final SELL/HOLD decision is made by priority in common_sell_decision.py.
     """
     min_holding_days = common_is_min_holding_days(position, config)
     hard_stop = common_is_hard_stop(position, config)
@@ -579,7 +579,7 @@ def common_decide_sell_guard(
 
 def _common_get_position_today_return(position: CommonPositionContext) -> float:
     """
-    position.raw 또는 latest_stock에서 당일 수익률 계열 값을 추출.
+    Extract a same-day return-family value from position.raw or latest_stock.
     """
     candidates = [
         position.raw.get("today_return"),

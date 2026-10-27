@@ -1,386 +1,386 @@
 # CHANGELOG
 
-`port_strategy_common`의 주요 변경 이력을 기록한다.
+Records the primary change history of `port_strategy_common`.
 
-현재 구조와 사용 방법은 `README.md`, 작업 규칙은 `AGENTS.md`,
-파일별 책임과 영향은 `docs/source-file-catalog.md`를 기준으로 확인한다.
+Confirm the current structure and usage against `README.md`, the work rules against `AGENTS.md`,
+and per-file responsibilities and impact against `docs/source-file-catalog.md`.
 
 ## 2026-08-12
 
-### Common main Push 자동 Package Release 완성
+### Completed Common main Push automatic Package Release
 
-| 항목 | 값 |
+| Item | Value |
 |---|---|
 | Package Version | `1.0.1` |
-| 작업 성격 | Package Release 자동화 개선 |
-| Trigger | main Push 자동 + `workflow_dispatch` 유지 |
-| main Push | CodeArtifact Publish 활성화 |
+| Work nature | Package Release automation improvement |
+| Trigger | main Push automatic + `workflow_dispatch` retained |
+| main Push | CodeArtifact Publish enabled |
 | workflow_dispatch | Build-only |
 | Canonical Version Source | `pyproject.toml` |
 | Registry | AWS CodeArtifact |
-| Strategy Version | `COMMON_STRATEGY_V1.0.0` 유지 |
-| 전략 Rule·Config·API·Dataclass·Enum·Reason | 변경 없음 |
-| Consumer Repository | 변경 없음 |
+| Strategy Version | `COMMON_STRATEGY_V1.0.0` retained |
+| Strategy Rule·Config·API·Dataclass·Enum·Reason | No change |
+| Consumer Repository | No change |
 
-### 구현 변경
+### Implementation Changes
 
-| 항목 | 값 |
+| Item | Value |
 |---|---|
 | Package Version | `1.0.0` → `1.0.1` |
-| `verify_wheel.py` | Version 하드코딩 제거 · `pyproject.toml` 동적 검증 |
-| 공개 계약 테스트 | Package Version 하드코딩 제거 · `pyproject.toml` 동적 비교 |
-| Version Guard | 동일 Version 존재 시 Publish 차단 추가 |
-| Build Gate | Build 실패 시 Publish 차단 |
-| CodeBuild 기본 Publish | `false` 안전장치 유지 |
-| 인증·권한 정합성 | 자동 Release 실행을 위한 보완 |
+| `verify_wheel.py` | Removed Version hardcoding · dynamic validation from `pyproject.toml` |
+| Public API test | Removed Package Version hardcoding · dynamic comparison with `pyproject.toml` |
+| Version Guard | Added Publish block when the same Version exists |
+| Build Gate | Block Publish on a Build failure |
+| CodeBuild default Publish | `false` safeguard retained |
+| Authentication·permission alignment | Complemented to run the automatic Release |
 
 ### Publish After-check
 
-| 항목 | 결과 |
+| Item | Result |
 |---|---|
-| main Push Workflow | 자동 실행 성공 |
-| GitHub Actions → CodeBuild | 성공 |
+| main Push Workflow | Automatic run succeeded |
+| GitHub Actions → CodeBuild | Succeeded |
 | CodeBuild | SUCCEEDED |
-| CodeArtifact Publish | `1.0.1` INTERNAL Package Published 확인 |
-| Wheel Asset | `port_strategy_common-1.0.1-py3-none-any.whl` 존재 확인 |
+| CodeArtifact Publish | Confirmed `1.0.1` INTERNAL Package Published |
+| Wheel Asset | Confirmed `port_strategy_common-1.0.1-py3-none-any.whl` exists |
 
-상세 DevOps Architecture, IAM 책임 경계, OIDC Trust와 운영 증적은 port-devops가 관리한다.
+Detailed DevOps Architecture, IAM responsibility boundaries, OIDC Trust, and operational evidence are managed by port-devops.
 
 ## 2026-07-30
 
-### Common DevOps와 Version Package 배포 구성
+### Common DevOps and Version Package deployment configuration
 
-| 항목 | 값 |
+| Item | Value |
 |---|---|
-| 변경 범위 | DevOps 구성 파일과 문서 |
-| 작업 성격 | Versioned Python Package Build·배포 구성 |
+| Change scope | DevOps configuration files and documentation |
+| Work nature | Versioned Python Package Build·deployment configuration |
 | Package Version | `1.0.0` |
 | Strategy Version | `COMMON_STRATEGY_V1.0.0` |
 | Artifact | Python Wheel |
 | CI | GitHub Actions → AWS CodeBuild |
 | Registry | AWS CodeArtifact |
 | Consumer Contract | Research 48/48, Decision 24/24 |
-| 정식 승격 | `1.0.0rc1` → `1.0.0` Publish |
-| Rollback | 이전 Published Version Pin 재설치 |
-| 전략 판단 변경 | 없음 |
-| Config 변경 | 없음 |
-| 공개 함수 변경 | 없음 |
-| Dataclass·Enum·Reason 변경 | 없음 |
-| DB·API·주문 실행 | 없음 |
+| Release promotion | `1.0.0rc1` → `1.0.0` Publish |
+| Rollback | Reinstall pinned to the previously published Version |
+| Strategy decision change | None |
+| Config change | None |
+| Public function change | None |
+| Dataclass·Enum·Reason change | None |
+| DB·API·order execution | None |
 
-전략 판단 로직, Config, 공개 함수, Dataclass, Enum과 Reason 변경은 없다.
+There is no change to the strategy decision logic, Config, public functions, Dataclasses, Enums, and Reasons.
 
-### CI와 Wheel Build
+### CI and Wheel Build
 
-| 파일 | 역할 |
+| File | Role |
 |---|---|
-| `pyproject.toml` | Package Metadata·Version·Dependency 선언 |
-| `.github/workflows/common-codebuild.yml` | OIDC 인증과 CodeBuild 시작·대기 |
-| `.devops/codebuild/buildspec.yml` | 품질 게이트·Wheel Build·조건부 Publish |
-| `.devops/scripts/verify_wheel.py` | Wheel 이름·필수 Member·SHA-256 검증 |
-| `tests/test_public_contract.py` | 설치된 Wheel 기준 공개 계약 테스트 |
+| `pyproject.toml` | Declares Package Metadata·Version·Dependency |
+| `.github/workflows/common-codebuild.yml` | OIDC authentication and CodeBuild start·wait |
+| `.devops/codebuild/buildspec.yml` | Quality gates·Wheel Build·conditional Publish |
+| `.devops/scripts/verify_wheel.py` | Wheel name·required Member·SHA-256 validation |
+| `tests/test_public_contract.py` | Public API test against the installed Wheel |
 
-품질 게이트는 Ruff, mypy(`.devops/scripts` 범위), Wheel Build,
-Twine Check, Wheel 구조 검증과 공개 계약 테스트 4건이다.
+The quality gates are Ruff, mypy (`.devops/scripts` scope), Wheel Build,
+Twine Check, Wheel structure validation, and 4 Public API tests.
 
-### CodeArtifact 배포
+### CodeArtifact Deployment
 
-| 항목 | 값 |
+| Item | Value |
 |---|---|
-| RC Publish | `1.0.0rc1` CodeArtifact 배포 |
-| RC 검증 | 설치된 Wheel 공개 계약 테스트 4건 통과 |
-| 정식 Publish | `1.0.0` CodeArtifact 배포 |
-| Version 보존 | RC와 정식 Version 동시 보존 |
-| 기본 Publish | 프로젝트 기본값 `false` |
-| Release Publish | 승인 Release Build에서만 일회성 Override |
+| RC Publish | `1.0.0rc1` deployed to CodeArtifact |
+| RC validation | 4 installed-Wheel Public API tests passed |
+| Release Publish | `1.0.0` deployed to CodeArtifact |
+| Version preservation | RC and release Versions preserved simultaneously |
+| Default Publish | Project default `false` |
+| Release Publish | One-time Override only in an approved Release Build |
 
 ### Consumer Contract
 
-| Consumer | 결과 |
+| Consumer | Result |
 |---|---|
-| StrategyResearch | 48건 통과 |
-| StrategyDecision | 24건 통과 |
-| StrategyExecution | 직접 Import 없음 · 대상 아님 |
-| Legacy `utils.to_float` | Research가 직접 Import · pandas 필요 |
-| pandas 제공 | Research 자체 Runtime Dependency |
+| StrategyResearch | 48 passed |
+| StrategyDecision | 24 passed |
+| StrategyExecution | No direct Import · Not a target |
+| Legacy `utils.to_float` | Research imports it directly · pandas required |
+| pandas provision | Research's own Runtime Dependency |
 
-### 정식 승격과 Rollback
+### Release Promotion and Rollback
 
-| 항목 | 값 |
+| Item | Value |
 |---|---|
-| 정식 설치 검증 | `1.0.0` Wheel 설치 후 검증 |
-| 공개 Symbol | 6개 확인 |
-| 공개 계약 테스트 | 4건 통과 |
-| Rollback 재설치 | `1.0.0rc1` Version Pin 재설치 |
-| Rollback 검증 | 공개 계약 테스트 4건 재통과 |
-| Git Repository | 무변경 |
-| 방식 | Version Pin 재설치 |
+| Release installation validation | Validated after installing the `1.0.0` Wheel |
+| Public Symbols | 6 confirmed |
+| Public API test | 4 passed |
+| Rollback reinstall | Reinstalled pinned to `1.0.0rc1` Version |
+| Rollback validation | 4 Public API tests re-passed |
+| Git Repository | No change |
+| Method | Version Pin reinstall |
 
-### 작업 경계
+### Work Boundary
 
-| 항목 | 결과 |
+| Item | Result |
 |---|---|
-| 전략 Python 로직 변경 | 없음 |
-| DB DDL·DML | 없음 |
-| 외부 API 호출 | 없음 |
-| 주문 실행 | 없음 |
-| Consumer Repository 수정 | 없음 |
-| 민감정보 문서 기록 | 없음 |
-| 배포 Slack 알림 연계 | 없음 |
+| Strategy Python logic change | None |
+| DB DDL·DML | None |
+| External API call | None |
+| Order execution | None |
+| Consumer Repository modification | None |
+| Sensitive information in documentation | None |
+| Deployment Slack notification linkage | None |
 
 ## 2026-07-23
 
-### Common 문서 기준 재정비
+### Common documentation baseline reorganization
 
-| 항목 | 변경 내용 |
+| Item | Change content |
 |---|---|
-| 변경 범위 | `AGENTS.md`, `README.md`, `CHANGELOG.md`, `docs/source-file-catalog.md` 문서 기준 재정비 |
-| 작업 성격 | 현재 Common 책임과 공개 계약을 기준으로 한 문서 개선 |
-| 기능 변경 | 없음 |
-| Python 코드 변경 | 없음 |
-| Config 변경 | 없음 |
-| Enum 변경 | 없음 |
-| Dataclass 변경 | 없음 |
-| Reason 변경 | 없음 |
-| Consumer 변경 | 없음 |
-| Version 변경 | 없음 |
-| 외부 실행 | 없음 |
+| Change scope | Baseline reorganization of `AGENTS.md`, `README.md`, `CHANGELOG.md`, `docs/source-file-catalog.md` documents |
+| Work nature | Documentation improvement based on the current Common responsibilities and Public API |
+| Functional change | None |
+| Python code change | None |
+| Config change | None |
+| Enum change | None |
+| Dataclass change | None |
+| Reason change | None |
+| Consumer change | None |
+| Version change | None |
+| External execution | None |
 
 ### AGENTS.md
 
-| 항목 | 변경 내용 |
+| Item | Change content |
 |---|---|
-| 문서 가독성 | 2열 표, 긴 셀 분리, 500자 Line 제한을 최우선 규칙으로 추가 |
-| 규칙 우선순위 | 사용자 지시, Workspace 공통 규칙과 Common 전용 규칙 관계 정리 |
-| 프로젝트 역할 | Common을 독립 실행 MS가 아닌 공유 전략 Library로 명확화 |
-| 책임 경계 | Research·Decision·Execution·MarketConnector와 역할 분리 |
-| Consumer 관계 | Consumer Adapter와 Common Context 경계 추가 |
-| 작업 범위 | Common Root만 수정하고 Consumer 저장소는 읽기 전용으로 제한 |
-| 실행 안전 | DB·API·AWS·주문·File Write·Side Effect 실행 금지 강화 |
-| 순수성 | DB·HTTP·File IO·환경변수·Clock·Random·Global Mutation 금지 |
-| 공개 API | Module·함수·Parameter·Return·Export 호환성 기준 추가 |
-| Context 계약 | Field·순서·Default·Optional·단위·날짜·Serialization 기준 추가 |
-| Result 계약 | Signal·Status·Reason·Numeric·Detail 역할과 Default 기준 추가 |
-| Enum 계약 | Member·Value·대소문자·직렬화 호환성 기준 추가 |
-| Reason 계약 | DB·Report·Slack·View·Test 문자열 영향 추가 |
-| Config 계약 | Key·Default·단위·Override·Snapshot 호환성 기준 추가 |
-| Config Mutation | Deep Copy·원본 보존·호출 순서 독립성 기준 추가 |
-| Market 계약 | Regime·Exposure·Threshold Boundary 확인 기준 추가 |
-| BUY 계약 | Filter·Guard·Sizing·Decision 책임과 Orchestration 분리 |
-| SELL 계약 | Guard·Decision·Backtest 호환 평가 기준 추가 |
-| Block Watch | Block·Watch·해제 조건·날짜 의미 분리 |
-| 결정론 | 동일 입력과 Config에서 동일 결과 유지 기준 추가 |
-| Look-ahead | Feature·Price·Trade Date와 Holding Days 안전 기준 추가 |
-| 수치 안전 | Float·Decimal·NaN·Inf·Rounding·단위 기준 추가 |
-| Import 계약 | Package Export·Circular Import·Import Side Effect 기준 추가 |
-| Version | 전략 결과 변경과 Version Metadata 관계 추가 |
-| Legacy | `utils.py` 등 실제 참조 확인 전 삭제 금지 |
-| 테스트 | Context·Enum·Config·Boundary·Consumer Contract 검증 기준 추가 |
-| 변경 분류 | 문서·리팩터링·전략 변경·Breaking Change 구분 |
-| 문서 체계 | AGENTS·README·CHANGELOG·Source Catalog 역할 분리 |
-| Worklog | 날짜별 Worklog 신규 생성 금지 |
-| 완료 보고 | 공개 계약·Consumer 영향·전략 결과 변경 여부 보고 기준 추가 |
+| Documentation readability | Added 2-column tables, long-cell splitting, and the 500-character line limit as highest-priority rules |
+| Rule priority | Organized the relationship among user instructions, Workspace-common rules, and Common-specific rules |
+| Project role | Clarified Common as a shared strategy Library rather than a standalone MS |
+| Responsibility boundary | Separated roles from Research·Decision·Execution·MarketConnector |
+| Consumer relationships | Added the Consumer Adapter and Common Context boundary |
+| Work scope | Modify only the Common Root and limit Consumer repositories to read-only |
+| Execution safety | Strengthened the prohibition on DB·API·AWS·order·File Write·Side Effect execution |
+| Purity | Prohibit DB·HTTP·File IO·environment variables·Clock·Random·Global Mutation |
+| Public API | Added Module·function·Parameter·Return·Export compatibility criteria |
+| Context contract | Added Field·order·Default·Optional·unit·date·Serialization criteria |
+| Result contract | Added Signal·Status·Reason·Numeric·Detail roles and Default criteria |
+| Enum contract | Added Member·Value·case·serialization compatibility criteria |
+| Reason contract | Added DB·Report·Slack·View·Test string impact |
+| Config contract | Added Key·Default·unit·Override·Snapshot compatibility criteria |
+| Config Mutation | Added Deep Copy·original preservation·call-order independence criteria |
+| Market contract | Added Regime·Exposure·Threshold Boundary confirmation criteria |
+| BUY contract | Separated Filter·Guard·Sizing·Decision responsibilities and Orchestration |
+| SELL contract | Added Guard·Decision·Backtest-compatible evaluation criteria |
+| Block Watch | Separated Block·Watch·release condition·date meaning |
+| Determinism | Added the criterion of keeping the same result for the same input and Config |
+| Look-ahead | Added Feature·Price·Trade Date and Holding Days safety criteria |
+| Numeric safety | Added Float·Decimal·NaN·Inf·Rounding·unit criteria |
+| Import contract | Added Package Export·Circular Import·Import Side Effect criteria |
+| Version | Added the relationship between strategy result change and Version Metadata |
+| Legacy | Prohibit deleting `utils.py` and similar before confirming actual references |
+| Testing | Added Context·Enum·Config·Boundary·Consumer Contract validation criteria |
+| Change classification | Distinguished documentation·refactoring·strategy change·Breaking Change |
+| Documentation system | Separated AGENTS·README·CHANGELOG·Source Catalog roles |
+| Worklog | Prohibited creating new date-specific Worklogs |
+| Completion report | Added the criterion to report Public API·Consumer impact·whether strategy results changed |
 
 ### README.md
 
-| 항목 | 변경 내용 |
+| Item | Change content |
 |---|---|
-| 서비스 요약 | 입력·출력·Consumer·실행 형태·순수성 원칙 추가 |
-| 책임 경계 | Common 판단 계약과 Consumer Persistence 책임 분리 |
-| Consumer 구조 | Adapter → Context → Common → Result 흐름 추가 |
-| Research | Backtest 판단 재사용과 Look-ahead 책임 구분 |
-| Decision | Daily Adapter와 Persistence 책임 구분 |
-| Execution | 실제 Import 범위를 코드 확인 대상으로 제한 |
-| 기타 MS | Import 근거 없이 Consumer로 단정하지 않도록 정리 |
-| 순수 함수 | DB·HTTP·File IO·Clock·Random·Global Mutation 금지 명시 |
-| 결정론 | 동일 입력·Config에서 동일 결과 원칙 추가 |
-| 공개 계약 | 함수·Field·Enum·Reason·Config·Export 계약 추가 |
-| Context | Field·Type·Default·Optional·단위·날짜 기준 추가 |
-| Result | Signal·Status·Reason·Numeric·Detail 역할 분리 |
-| Enum | 실제 Class·Value를 코드에서 확인하도록 정리 |
-| Reason | 저장·집계·표시·Test 영향 추가 |
-| Config | Threshold·Default·Weight·Key 변경 영향 정리 |
-| Snapshot | Copy·Mutation·Override·Secret 배제 기준 추가 |
-| Market | Regime·Exposure·Boundary 확인 기준 추가 |
-| BUY 흐름 | Filter → Guard → Sizing → Decision 구조 추가 |
-| SELL 흐름 | Guard → SELL·HOLD와 Backtest 호환 구조 추가 |
-| Block Watch | Block·Watch·Release 의미 분리 |
-| 수치 안전 | Float·Decimal·NaN·Inf·단위·Rounding 기준 추가 |
-| 날짜 안전 | Trade·Feature·Price Date와 Look-ahead 기준 추가 |
-| Package | `__init__.py`, `common_utils.py`, `utils.py` 책임 구분 |
-| Version | 결과 변경과 Metadata 갱신 관계 추가 |
-| 파일 구조 | 현재 Root와 `docs/source-file-catalog.md` 구조 반영 |
-| Worklog | 현재 파일 구조에서 제거하고 신규 생성 금지 반영 |
-| AWS | 독립 실행 대상이 아닌 Consumer Dependency로 명확화 |
-| 보안 | Config Snapshot과 Detail Payload의 Secret 배제 추가 |
-| 검증 | 문서 변경과 코드 변경 검증 범위 분리 |
-| 변경 영향 | 문서·리팩터링·전략 결과·Breaking Change 분류 추가 |
-| 확인 항목 | Public API·Consumer Import·Config·Determinism 등 미확정 사항 분리 |
+| Service summary | Added input·output·Consumer·execution form·purity principles |
+| Responsibility boundary | Separated the Common decision contract from the Consumer Persistence responsibility |
+| Consumer structure | Added the Adapter → Context → Common → Result flow |
+| Research | Distinguished Backtest decision reuse from the Look-ahead responsibility |
+| Decision | Distinguished the Daily Adapter from the Persistence responsibility |
+| Execution | Limited the actual Import scope to a code-confirmation target |
+| Other MS | Organized to avoid concluding a Consumer without Import evidence |
+| Pure functions | Explicitly stated the prohibition on DB·HTTP·File IO·Clock·Random·Global Mutation |
+| Determinism | Added the principle of the same result for the same input·Config |
+| Public API | Added the function·Field·Enum·Reason·Config·Export contract |
+| Context | Added Field·Type·Default·Optional·unit·date criteria |
+| Result | Separated the Signal·Status·Reason·Numeric·Detail roles |
+| Enum | Organized to confirm the actual Class·Value in the code |
+| Reason | Added storage·aggregation·display·Test impact |
+| Config | Organized the impact of Threshold·Default·Weight·Key changes |
+| Snapshot | Added Copy·Mutation·Override·Secret-exclusion criteria |
+| Market | Added Regime·Exposure·Boundary confirmation criteria |
+| BUY flow | Added the Filter → Guard → Sizing → Decision structure |
+| SELL flow | Added the Guard → SELL·HOLD and Backtest compatibility structure |
+| Block Watch | Separated the Block·Watch·Release meaning |
+| Numeric safety | Added Float·Decimal·NaN·Inf·unit·Rounding criteria |
+| Date safety | Added Trade·Feature·Price Date and Look-ahead criteria |
+| Package | Separated the responsibilities of `__init__.py`, `common_utils.py`, and `utils.py` |
+| Version | Added the relationship between result change and Metadata update |
+| File structure | Reflected the current Root and `docs/source-file-catalog.md` structure |
+| Worklog | Removed from the current file structure and reflected the prohibition on new creation |
+| AWS | Clarified as a Consumer Dependency rather than a standalone execution target |
+| Security | Added Secret exclusion from the Config Snapshot and Detail Payload |
+| Validation | Separated the validation scope of documentation changes and code changes |
+| Change impact | Added the documentation·refactoring·strategy result·Breaking Change classification |
+| Confirmation items | Separated unconfirmed matters such as Public API·Consumer Import·Config·Determinism |
 
 ### CHANGELOG.md
 
-| 항목 | 변경 내용 |
+| Item | Change content |
 |---|---|
-| 구조 | 장문 Bullet과 반복 Notes를 날짜별 2열 변경 요약으로 재구성 |
-| 최신 이력 | 2026-07-23 Common 문서 기준 재정비 내역 추가 |
-| 변경 경계 | 문서 변경과 코드·Config·Enum·Dataclass 변경을 분리 |
-| 과거 이력 | 2026-05-26~2026-07-01 실제 변경 사실 보존 |
-| 언어 | 2026-05-28 영문 변경 문장을 한글 사실형 문장으로 정리 |
-| Worklog | 과거 생성 사실은 보존하고 현재 신규 생성 금지 정책과 구분 |
-| 민감정보 | Credential과 AWS 운영 식별자 원문 미기록 원칙 유지 |
+| Structure | Reorganized long-form Bullets and repeated Notes into per-date 2-column change summaries |
+| Latest history | Added the 2026-07-23 Common documentation baseline reorganization entry |
+| Change boundary | Separated documentation changes from code·Config·Enum·Dataclass changes |
+| Past history | Preserved actual change facts from 2026-05-26 to 2026-07-01 |
+| Language | Organized the 2026-05-28 English change sentences into Korean factual sentences |
+| Worklog | Preserved past creation facts and distinguished them from the current no-new-creation policy |
+| Sensitive information | Maintained the principle of not recording Credentials and AWS operational identifiers verbatim |
 
 ### docs/source-file-catalog.md
 
-| 항목 | 변경 내용 |
+| Item | Change content |
 |---|---|
-| 구조 | 파일 설명 목록을 책임·공개 계약·Consumer 영향 구조로 재구성 |
-| 계약 분리 | Context·Result·Enum·Config·Decision 파일 책임 분리 |
-| Consumer 영향 | Research·Decision·Execution 영향 지도 추가 |
-| 순수성 | 순수성과 Import Side Effect 지도 추가 |
-| 결정론 | 결정론과 재현성 위험 지도 추가 |
-| 수치·날짜 | 수치·날짜·Look-ahead 영향 지도 추가 |
-| 변경 관계 | 파일 변경 영향 관계 표 추가 |
-| Worklog | 현재 파일 구조와 Catalog 목록에서 Worklog 제거 |
-| 갱신 조건 | Public API·Field·Enum·Reason·Config·Consumer 변경 시 갱신 조건 추가 |
+| Structure | Reorganized the file description list into a responsibility·Public API·Consumer impact structure |
+| Contract separation | Separated the responsibilities of the Context·Result·Enum·Config·Decision files |
+| Consumer impact | Added the Research·Decision·Execution impact map |
+| Purity | Added the purity and Import Side Effect map |
+| Determinism | Added the determinism and reproducibility risk map |
+| Numeric·date | Added the numeric·date·Look-ahead impact map |
+| Change relationships | Added the file change impact relationship table |
+| Worklog | Removed the Worklog from the current file structure and Catalog list |
+| Update conditions | Added update conditions for Public API·Field·Enum·Reason·Config·Consumer changes |
 
-### 공개 계약 보강
+### Public API Reinforcement
 
-| 계약 | 보강 내용 |
+| Contract | Reinforcement content |
 |---|---|
-| 함수 | 공개 함수명·Parameter·Return Type을 Consumer 계약으로 취급 |
-| Context | Dataclass Field와 Default 변경을 호환성 영향으로 분류 |
-| Result | Signal·Status·Reason·Detail 구조 유지 기준 추가 |
-| Enum | Member와 Value 문자열을 외부 계약으로 취급 |
-| Reason | 문구 수정도 집계·View·Slack·Test 영향 가능성 명시 |
-| Config | Key·Default·Threshold 변경을 전략 결과 영향으로 분류 |
-| Export | `__init__.py` 공개 Symbol 변경 위험 추가 |
-| Version | 전략 Rule 변경과 Metadata 갱신 판단 기준 추가 |
+| Function | Treated public function names·Parameters·Return Types as Consumer contracts |
+| Context | Classified Dataclass Field and Default changes as compatibility impact |
+| Result | Added the criterion of keeping the Signal·Status·Reason·Detail structure |
+| Enum | Treated Member and Value strings as an external contract |
+| Reason | Stated that wording fixes may affect aggregation·View·Slack·Test |
+| Config | Classified Key·Default·Threshold changes as strategy result impact |
+| Export | Added the risk of `__init__.py` public Symbol changes |
+| Version | Added the criterion for judging strategy Rule change and Metadata update |
 
-### 순수성과 재현성 보강
+### Purity and Reproducibility Reinforcement
 
-| 항목 | 기준 |
+| Item | Criterion |
 |---|---|
-| DB | Common 전략 Module에서 접근하지 않음 |
-| HTTP·API | 외부 Client 호출 금지 |
-| File IO | 판단 함수 내부 읽기·쓰기 금지 |
-| Environment | 함수 내부 직접 환경변수 조회 금지 |
-| Clock | 현재 시각 직접 사용 금지 |
-| Random | Seed 없는 난수 금지 |
-| Global State | Mutable Global 변경 금지 |
-| Config | Caller Mutation이 원본에 영향을 주지 않음 |
-| Determinism | 동일 입력·Config에 동일 결과 |
-| Look-ahead | 미래 Feature·Price 참조 금지 |
+| DB | Not accessed in Common strategy Modules |
+| HTTP·API | Prohibit external Client calls |
+| File IO | Prohibit reading·writing inside decision functions |
+| Environment | Prohibit direct environment variable lookup inside functions |
+| Clock | Prohibit direct use of the current time |
+| Random | Prohibit random numbers without a Seed |
+| Global State | Prohibit changing Mutable Global |
+| Config | Caller Mutation does not affect the original |
+| Determinism | Same result for the same input·Config |
+| Look-ahead | Prohibit referencing future Feature·Price |
 
-### 작업 경계
+### Work Boundary
 
-| 항목 | 결과 |
+| Item | Result |
 |---|---|
-| Python 실행 | 수행하지 않음 |
-| Import Test | 수행하지 않음 |
-| Consumer 실행 | 수행하지 않음 |
-| Backtest·Daily 실행 | 수행하지 않음 |
-| DB DDL·DML | 수행하지 않음 |
-| 외부 API·Crawler | 수행하지 않음 |
-| 주문·Broker 호출 | 수행하지 않음 |
-| AWS CLI·SDK | 수행하지 않음 |
-| 민감정보 조회·기록 | 수행하지 않음 |
-| 문서 정적 검토 | 수행 |
+| Python execution | Not performed |
+| Import Test | Not performed |
+| Consumer execution | Not performed |
+| Backtest·Daily execution | Not performed |
+| DB DDL·DML | Not performed |
+| External API·Crawler | Not performed |
+| Order·Broker call | Not performed |
+| AWS CLI·SDK | Not performed |
+| Sensitive information query·recording | Not performed |
+| Documentation static review | Performed |
 
 ## 2026-07-01
 
-### Common 운영 문서 보강
+### Common operational documentation reinforcement
 
-| 항목 | 변경 내용 |
+| Item | Change content |
 |---|---|
-| README | Common 책임 경계와 Consumer 의존성 추가 |
-| AWS | 직접 실행 MS가 아닌 Dependency 성격 명시 |
-| 호환성 | 공개 함수·Dataclass·Enum·Reason·Config Key 유지 기준 추가 |
-| AGENTS | 당시 Worklog 들여쓰기 형식을 ` 1)` 기준으로 정리 |
-| 상태 표기 | 당시 Worklog 상태를 `작업 명:완료` 형식으로 통일 |
+| README | Added the Common responsibility boundary and Consumer dependencies |
+| AWS | Stated its Dependency nature rather than as a directly executing MS |
+| Compatibility | Added the criterion of keeping public functions·Dataclasses·Enums·Reasons·Config Keys |
+| AGENTS | Organized the Worklog indentation format of the time to the ` 1)` basis |
+| Status notation | Unified the Worklog status of the time to the `작업 명:완료` format |
 
-### 당시 추가 문서
+### Documents Added at the Time
 
-| 항목 | 변경 내용 |
+| Item | Change content |
 |---|---|
-| Worklog | `docs/worklog/2026-07-01.md` 생성 |
-| 현재 정책 | 과거 생성 사실은 보존하되 신규 Worklog는 만들지 않음 |
+| Worklog | Created `docs/worklog/2026-07-01.md` |
+| Current policy | Preserve past creation facts but do not create new Worklogs |
 
-### 당시 작업 경계
+### Work Boundary at the Time
 
-| 항목 | 결과 |
+| Item | Result |
 |---|---|
-| 기능 변경 | 없음 |
-| Python 코드 변경 | 없음 |
-| Config Key 변경 | 없음 |
-| Enum 변경 | 없음 |
-| Dataclass Field 변경 | 없음 |
-| Reason 변경 | 없음 |
-| Python 실행 | 수행하지 않음 |
-| DB DDL·DML | 수행하지 않음 |
-| 외부 API·Crawler | 수행하지 않음 |
-| 주문 실행 | 수행하지 않음 |
-| 민감정보 기록 | 하지 않음 |
+| Functional change | None |
+| Python code change | None |
+| Config Key change | None |
+| Enum change | None |
+| Dataclass Field change | None |
+| Reason change | None |
+| Python execution | Not performed |
+| DB DDL·DML | Not performed |
+| External API·Crawler | Not performed |
+| Order execution | Not performed |
+| Sensitive information recording | Not done |
 
-### 당시 책임 경계
+### Responsibility Boundary at the Time
 
-당시 Common과 직접 관련된 내용만 문서화했다.
+At the time, only content directly related to Common was documented.
 
-| 제외 영역 | 담당 |
+| Excluded area | Owner |
 |---|---|
-| View 화면·승인 UI | port-view |
+| View screens·approval UI | port-view |
 | Broker·KIS API | MarketConnector |
-| 원천 데이터 수집 | Crawler |
-| Feature 생성 | Preprocessor |
-| Daily 저장 | StrategyDecision |
-| Backtest·Report 저장 | StrategyResearch |
+| Source data collection | Crawler |
+| Feature generation | Preprocessor |
+| Daily storage | StrategyDecision |
+| Backtest·Report storage | StrategyResearch |
 | Execution Plan·Order | StrategyExecution |
-| Scheduler·Lambda·Step Functions | 해당 운영 구성 |
+| Scheduler·Lambda·Step Functions | The relevant operational configuration |
 
 ## 2026-05-28
 
-### Source와 문서 정리
+### Source and documentation cleanup
 
-| 항목 | 변경 내용 |
+| Item | Change content |
 |---|---|
-| Source Catalog | `docs/source-file-catalog.md` 최초 추가 |
-| Module Docstring | 주요 Python 파일에 한글 설명 추가 |
-| DB Dependency | Common Core의 DB 의존성 제거 |
-| Runtime Config | Snapshot 범위를 전략 설정으로 제한 |
-| README | 파일 Catalog와 설명 주석 상태 반영 |
-| Worklog | `docs/worklog/2026-05-28.md` 생성 |
+| Source Catalog | Added `docs/source-file-catalog.md` for the first time |
+| Module Docstring | Added Korean descriptions to primary Python files |
+| DB Dependency | Removed the DB dependency of the Common Core |
+| Runtime Config | Limited the Snapshot scope to strategy settings |
+| README | Reflected the file Catalog and description-comment state |
+| Worklog | Created `docs/worklog/2026-05-28.md` |
 
-### 당시 변경 성격
+### Change Nature at the Time
 
-| 항목 | 결과 |
+| Item | Result |
 |---|---|
-| Common DB Dependency | 제거 |
-| Runtime Config 범위 | 전략 설정으로 제한 |
-| 외부 실행 | 수행하지 않음 |
-| DB DDL·DML | 수행하지 않음 |
-| 외부 API·Crawler | 수행하지 않음 |
-| 주문 실행 | 수행하지 않음 |
-| 민감정보 기록 | 하지 않음 |
+| Common DB Dependency | Removed |
+| Runtime Config scope | Limited to strategy settings |
+| External execution | Not performed |
+| DB DDL·DML | Not performed |
+| External API·Crawler | Not performed |
+| Order execution | Not performed |
+| Sensitive information recording | Not done |
 
-이 날짜의 DB Dependency 제거는 실제 코드·구조 변경 이력이다.
-현재 구현과 일치하는지는 최신 소스에서 확인한다.
+The DB Dependency removal on this date is an actual code·structure change history.
+Confirm whether it matches the current implementation in the latest source.
 
 ## 2026-05-26
 
-### 초기 문서
+### Initial documentation
 
-| 항목 | 변경 내용 |
+| Item | Change content |
 |---|---|
-| AGENTS | 초기 `AGENTS.md` 추가 |
-| README | 초기 `README.md` 추가 |
-| Worklog | `docs/worklog/2026-05-26.md` 생성 |
+| AGENTS | Added the initial `AGENTS.md` |
+| README | Added the initial `README.md` |
+| Worklog | Created `docs/worklog/2026-05-26.md` |
 
-### 당시 작업 기준
+### Work Basis at the Time
 
-| 항목 | 기준 |
+| Item | Criterion |
 |---|---|
-| 문서 근거 | 당시 로컬 파일 구조와 일부 핵심 Module 확인 |
-| Python 실행 | 수행하지 않음 |
-| DB DDL·DML | 수행하지 않음 |
-| 외부 API·Crawler | 수행하지 않음 |
-| 주문 실행 | 수행하지 않음 |
-| 민감정보 | 실제 값을 기록하지 않음 |
+| Documentation basis | Confirmed the local file structure of the time and some core Modules |
+| Python execution | Not performed |
+| DB DDL·DML | Not performed |
+| External API·Crawler | Not performed |
+| Order execution | Not performed |
+| Sensitive information | Actual values not recorded |

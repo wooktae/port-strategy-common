@@ -1,7 +1,7 @@
-"""전략 코어 기본 설정과 runtime config snapshot 모듈.
+"""Strategy core default settings and runtime config snapshot module.
 
-시장, 필터, sizing, 매수/매도, 리포트 설정 값을 dictionary로 제공한다.
-runtime config snapshot은 전략 설정만 반환한다.
+Provides market, filter, sizing, buy/sell, and report setting values as dictionaries.
+The runtime config snapshot returns only the strategy settings.
 """
 
 from __future__ import annotations
@@ -100,7 +100,7 @@ SIZING_CONFIG = {
     "info_bonus_weight": Decimal("0.05"),
     "vol_penalty_multiplier": Decimal("16.0"),
 
-    # 고수급/고점수 과열 구간 미세 haircut 실험
+    # Experiment with a slight haircut in the high-flow / high-score overheated zone
     "high_flow_high_score_soft_enabled": False,
     "high_flow_high_score_flow_min": Decimal("0.90"),
     "high_flow_high_score_final_min": Decimal("0.60"),
@@ -135,12 +135,12 @@ SELL_CONFIG = {
     "market_block_max_win_holding_days": 8,
     "market_block_min_keep_profit": Decimal("0.021"),
 
-    # BLOCK에서도 매우 강한 종목은 유지 최소 수익 기준 완화
+    # Even under BLOCK, relax the minimum-profit threshold for holding very strong stocks
     "market_block_strong_min_flow": Decimal("0.85"),
     "market_block_strong_min_final": Decimal("0.55"),
     "market_block_strong_keep_profit": Decimal("0.000"),
 
-    # 실험 A: market_block_weak 정밀 완화
+    # Experiment A: fine-grained relaxation of market_block_weak
     "market_block_relax_min_holding_days": 4,
     "market_block_relax_max_holding_days": 5,
     "market_block_relax_min_flow": Decimal("0.80"),

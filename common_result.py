@@ -1,7 +1,7 @@
-"""공통 전략 판단 결과 dataclass 모음.
+"""Collection of shared strategy decision result dataclasses.
 
-시장, 필터, guard, sizing, 최종 매수/매도 판단 결과의 반환 형태를 정의한다.
-consumer 호환성을 위해 필드명과 reason 문자열 변경에 주의해야 한다.
+Defines the return shapes for market, filter, guard, sizing, and final buy/sell decision results.
+Take care when changing field names and reason strings, for consumer compatibility.
 """
 
 from __future__ import annotations
